@@ -19,21 +19,16 @@ PARAM_INITIAL_POSE = 'state/initial_pose'
 
 
 # The name of the node listening for speech-based commands.
-NODE_SPEECH = 'speech-eval'
+NODE_QR = 'find_qr'
 
 # The name of the topic in which the speech-based commands is published.
-TOPIC_SPEECH = 'sensor/speech'
+TOPIC_QR = 'sensor/qr_statement'
 
 # The delay between random speech-based commands.
 # It should be a list `[min_time, max_time]`, and the next command
 # will occur after a random number of seconds within such an interval.
-PARAM_SPEECH_TIME = 'test/random_sense/speech_time'
+PARAM_QR_TIME = 'test/random_sense/qr_time'
 
-# The string that the user can enter to start or end the interaction.
-# It should be a list of String (e.g., `["Hello", "Bye"]`), where the 
-# fist item makes the interaction start, while the second item is
-# the keyword that ends the interactions.
-PARAM_SPEECH_COMMANDS = 'config/speech_commands'
 # ---------------------------------------------------------
 
 

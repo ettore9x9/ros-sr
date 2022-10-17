@@ -16,6 +16,7 @@ catkin_python_setup()
 ## Generate messages in the 'msg' folder.
 add_message_files(
   FILES
+  Statement.msg
 )
 
 ## Generate services in the 'srv' folder.
@@ -29,11 +30,11 @@ add_action_files(
 )
 
 ## Generate added messages and services with any dependencies listed here.
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-#   actionlib_msgs
-# )
+generate_messages(
+ DEPENDENCIES
+ std_msgs
+ actionlib_msgs
+)
 
 ## The catkin_package macro generates cmake config files for your package.
 catkin_package(
