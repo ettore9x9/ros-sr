@@ -1,3 +1,3 @@
-string location
-string door
-bool completed
+string  location
+string  door
+time    stamp

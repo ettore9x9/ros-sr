@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy
+import rospkg
 
 # The name of the parameter to define the environment size.
 # It should be a list `[max_x, max_y]` such that x:[0, `max_x`) and y:[0, `max_y`).
@@ -15,20 +16,6 @@ PARAM_RANDOM_ACTIVE = 'test/random_sense/active'
 
 # The name of parameter to set the initial robot position.
 PARAM_INITIAL_POSE = 'state/initial_pose'
-# ---------------------------------------------------------
-
-
-# The name of the node listening for speech-based commands.
-NODE_QR = 'find_qr'
-
-# The name of the topic in which the speech-based commands is published.
-TOPIC_QR = 'sensor/qr_statement'
-
-# The delay between random speech-based commands.
-# It should be a list `[min_time, max_time]`, and the next command
-# will occur after a random number of seconds within such an interval.
-PARAM_QR_TIME = 'test/random_sense/qr_time'
-
 # ---------------------------------------------------------
 
 
@@ -84,9 +71,6 @@ PARAM_PLANNER_TIME = 'test/random_plan_time'
 # The name of the controller node.
 NODE_CONTROLLER = 'controller'
 
-# The name of the stete_machine node.
-NODE_STATE_MACHINE = 'state_machine'
-
 # The name of the action server solving the motion control problem.
 ACTION_CONTROLLER = 'motion/controller'
 
@@ -94,6 +78,33 @@ ACTION_CONTROLLER = 'motion/controller'
 # It should be a list `[min_time, max_time]`, and the time to reach a
 # via point will be a random number of seconds in such an interval.
 PARAM_CONTROLLER_TIME = 'test/random_motion_time'
+# -------------------------------------------------
+
+
+# The name of the node that publishes the statements about the environment.
+NODE_STATEMENT_PUB = 'statement_pub'
+
+# The name of the topic where the statements are published.
+TOPIC_STATEMENT = 'map/statement'
+
+# The name of a boolean parameter to active random generation of statements.
+# If the value is `False` the statements are generated in sequence. 
+# Instead, random statement sequence will be generate if `True`.
+PARAM_RANDOM_STATEMENT_ACTIVE = 'test/random_statements/active'
+
+# The delay between statements.
+# It should be a list `[min_time, max_time]`, and the new statement
+# will occur after a random number of seconds within such an interval.
+PARAM_STATEMENT_TIME = 'test/random_statements/statements_time'
+# -------------------------------------------------
+
+
+# The name of the state machine node.
+NODE_STATE_MACHINE = 'state_machine'
+
+# Get the file path for surveillance_robot
+rospack = rospkg.RosPack()
+PATH_TO_PKG = rospack.get_path('surveillance_robot')
 # -------------------------------------------------
 
 

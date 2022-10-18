@@ -6,12 +6,34 @@ import smach
 import smach_ros
 import time
 
+# Import constant name defined to structure the architecture.
 from surveillance_robot import architecture_name_mapper as anm
+
+# Import the custom message Statement
+from surveillance_robot.msg import Statement
+
+from armor_api.armor_client import ArmorClient
+from armor_api.armor_utils_client import ArmorUtilsClient
 
 # A tag for identifying logs producer.
 LOG_TAG = anm.NODE_STATE_MACHINE
 
 LIST_ACTIONS = ['complete_map','choose_next','just_visited','battery_high','battery_low']
+
+map_completed = 0
+
+client = ArmorClient('mapSurveillance', 'ontoRef')
+utils = ArmorUtilsClient(client)
+
+def Buildmap_cb(stat):
+    
+    if stat.location == '':
+        global map_completed
+        map_completed = 1
+    else:
+        client.call('ADD', 'OBJECTPROP', 'IND', ['hasDoor', stat.location, stat.door])
+        log_msg = f'Statement `Door {stat.door} is in location {stat.location}`added to the ontology.'
+        rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
 # define state Buildmap
 class Buildmap(smach.State):
@@ -21,11 +43,22 @@ class Buildmap(smach.State):
                              outcomes=LIST_ACTIONS,
                              input_keys=['buildmap_counter_in'],
                              output_keys=['buildmap_counter_out'])
+
+        owl_file_path = anm.PATH_TO_PKG+'/topological_map/topological_map.owl'
+        iri = 'http://bnc/exp-rob-lab/2022-23'
+        utils.load_ref_from_file(owl_file_path, iri, True, 'PELLET', False)
         
     def execute(self, userdata):
         # function called when exiting from the node, it can be blocking
-        time.sleep(5)
-        rospy.loginfo('Executing state BUILDMAP (users = %f)'%userdata.buildmap_counter_in)
+        subscriber = rospy.Subscriber(anm.TOPIC_STATEMENT, Statement, Buildmap_cb)
+
+        log_msg = f'Executing state BUILDMAP (users = {userdata.buildmap_counter_in}).'
+        rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+        r = rospy.Rate(10)  # 10hz
+        while not map_completed:
+            r.sleep()
+
         userdata.buildmap_counter_out = userdata.buildmap_counter_in + 1
         return 'complete_map'
 
@@ -76,7 +109,13 @@ class Recharge(smach.State):
 
         
 def main():
-    rospy.init_node('surveillance_state_machine')
+    # Get parameter and initialise this node.
+    rospy.init_node(anm.NODE_STATE_MACHINE, log_level=rospy.INFO)
+
+    # Log information.
+    log_msg = f'Initialise node `{anm.NODE_STATE_MACHINE}`.'
+    rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
 
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['container_interface'])

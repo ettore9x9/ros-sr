@@ -7,7 +7,6 @@ class statement():
 		self.location = location
 		self.door = door
 		self.already_stated = 0
-		self.delay = random.uniform(0.5,2)
 
 	def stated(self):
 		self.already_stated = 1
@@ -26,4 +25,4 @@ statement_list = [  statement('E','D6'),
 					statement('C2','D7'),
 					statement('R3','D3'),
 					statement('R4','D4'),
-					]
+				 	]
