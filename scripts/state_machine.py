@@ -9,31 +9,15 @@ import time
 # Import constant name defined to structure the architecture.
 from surveillance_robot import architecture_name_mapper as anm
 
-# Import the custom message Statement
-from surveillance_robot.msg import Statement
-
-from armor_api.armor_client import ArmorClient
-from armor_api.armor_utils_client import ArmorUtilsClient
+# Import the helper class.
+from surveillance_robot import state_machine_helper as smh
 
 # A tag for identifying logs producer.
 LOG_TAG = anm.NODE_STATE_MACHINE
 
-LIST_ACTIONS = ['complete_map','choose_next','just_visited','battery_high','battery_low']
+LIST_ACTIONS = ['complete_map','reach_location','just_visited','battery_high','battery_low']
 
-map_completed = 0
-
-client = ArmorClient('mapSurveillance', 'ontoRef')
-utils = ArmorUtilsClient(client)
-
-def Buildmap_cb(stat):
-    
-    if stat.location == '':
-        global map_completed
-        map_completed = 1
-    else:
-        client.call('ADD', 'OBJECTPROP', 'IND', ['hasDoor', stat.location, stat.door])
-        log_msg = f'Statement `Door {stat.door} is in location {stat.location}`added to the ontology.'
-        rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+helper = smh.helper()
 
 # define state Buildmap
 class Buildmap(smach.State):
@@ -43,23 +27,18 @@ class Buildmap(smach.State):
                              outcomes=LIST_ACTIONS,
                              input_keys=['buildmap_counter_in'],
                              output_keys=['buildmap_counter_out'])
-
-        owl_file_path = anm.PATH_TO_PKG+'/topological_map/topological_map.owl'
-        iri = 'http://bnc/exp-rob-lab/2022-23'
-        utils.load_ref_from_file(owl_file_path, iri, True, 'PELLET', False)
         
     def execute(self, userdata):
         # function called when exiting from the node, it can be blocking
-        subscriber = rospy.Subscriber(anm.TOPIC_STATEMENT, Statement, Buildmap_cb)
-
-        log_msg = f'Executing state BUILDMAP (users = {userdata.buildmap_counter_in}).'
+        log_msg = f'Executing state BUILDMAP.'
         rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
         r = rospy.Rate(10)  # 10hz
-        while not map_completed:
+        while not helper.map_completed:
             r.sleep()
 
-        userdata.buildmap_counter_out = userdata.buildmap_counter_in + 1
+        helper.initialize_map()
+
         return 'complete_map'
 
 # define state Query
@@ -72,10 +51,19 @@ class Query(smach.State):
 
     def execute(self, userdata):
         # function called when exiting from the node, it can be blocking
-        time.sleep(5)
-        rospy.loginfo('Executing state QUERY (users = %f)'%userdata.query_counter_in)
-        userdata.query_counter_out = userdata.query_counter_in + 1
-        return 'choose_next'
+
+        helper.reason()
+        reachable_locations = helper.robot_can_reach()
+        next_location = helper.choose_next_location(reachable_locations)
+        helper.goal_loc = next_location
+
+        log_msg = f'Executing state QUERY.'
+        rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+        if helper.battery_low:
+            return 'battery_low'
+
+        return 'reach_location'
 
 # define state Move
 class Move(smach.State):
@@ -87,10 +75,16 @@ class Move(smach.State):
 
     def execute(self, userdata):
         # function called when exiting from the node, it can be blocking
-        time.sleep(5)
-        rospy.loginfo('Executing state MOVE (users = %f)'%userdata.move_counter_in)
-        userdata.move_counter_out = userdata.move_counter_in + 1
-        return 'battery_low'
+
+        log_msg = f'Executing state MOVE.'
+        rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+        ### move to helper.goal_loc location ###
+        time.sleep(30)
+
+        helper.update_robot_position()
+
+        return 'just_visited'
 
 # define state Recharge
 class Recharge(smach.State):
@@ -116,7 +110,6 @@ def main():
     log_msg = f'Initialise node `{anm.NODE_STATE_MACHINE}`.'
     rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
-
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['container_interface'])
     sm.userdata.sm_counter = 0
@@ -126,7 +119,7 @@ def main():
         # Add states to the container
         smach.StateMachine.add('BUILDMAP', Buildmap(), 
                                transitions={'complete_map':'QUERY', 
-                                            'choose_next':'BUILDMAP',
+                                            'reach_location':'BUILDMAP',
                                             'just_visited':'BUILDMAP',
                                             'battery_high':'BUILDMAP',
                                             'battery_low':'BUILDMAP',
@@ -136,7 +129,7 @@ def main():
 
         smach.StateMachine.add('QUERY', Query(), 
                                transitions={'complete_map':'QUERY', 
-                                            'choose_next':'MOVE',
+                                            'reach_location':'MOVE',
                                             'just_visited':'QUERY',
                                             'battery_high':'QUERY',
                                             'battery_low':'RECHARGE',
@@ -146,7 +139,7 @@ def main():
 
         smach.StateMachine.add('MOVE', Move(), 
                                transitions={'complete_map':'MOVE', 
-                                            'choose_next':'MOVE',
+                                            'reach_location':'MOVE',
                                             'just_visited':'QUERY',
                                             'battery_high':'MOVE',
                                             'battery_low':'RECHARGE',
@@ -156,7 +149,7 @@ def main():
 
         smach.StateMachine.add('RECHARGE', Recharge(), 
                                transitions={'complete_map':'RECHARGE', 
-                                            'choose_next':'RECHARGE',
+                                            'reach_location':'RECHARGE',
                                             'just_visited':'RECHARGE',
                                             'battery_high':'QUERY',
                                             'battery_low':'RECHARGE',

@@ -1,0 +1,37 @@
+<launch>
+    <!-- Run the architecture's component and test it based on random-based stimulus. -->
+
+    <rosparam param="test/random_sense/active"> True </rosparam>
+
+    <rosparam param="test/random_plan_points"> [2, 8] </rosparam>
+    <rosparam param="test/random_plan_time"> [0.2, 0.8] </rosparam>
+    <rosparam param="test/random_motion_time"> [0.1, 1.0] </rosparam>
+
+    <rosparam param="test/random_sense/gesture_time"> [2.0, 10.0] </rosparam>
+    <rosparam param="test/random_sense/speech_time"> [2.0, 30.0] </rosparam>
+    <rosparam param="test/random_sense/battery_time"> [15.0, 40.0] </rosparam>
+    <rosparam param="test/random_sense/statement_time"> [0.5, 1.0] </rosparam>
+
+    <node pkg="armor" 
+          type="execute" 
+          name="armor_service" 
+          args="it.emarolab.armor.ARMORMainService"
+          launch-prefix="xterm -fa 'Monospace' -fs 10 -e"
+          output="screen"
+    > </node>
+
+    <node pkg = "surveillance_robot"
+          type = "state_machine.py"      
+          name = "state_machine"
+          launch-prefix="xterm -fa 'Monospace' -fs 14 -e"
+          output = "screen"
+    > </node>
+
+    <node pkg = "surveillance_robot"  
+          type = "find_qr.py"
+          name = "find_qr"
+          launch-prefix="xterm -fa 'Monospace' -fs 10 -e"
+          output = "screen"
+    > </node>
+
+</launch>

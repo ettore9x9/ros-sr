@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import random
-
 class statement():
 	def __init__(self, location, door):
 		self.location = location

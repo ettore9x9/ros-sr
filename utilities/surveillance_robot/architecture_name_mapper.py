@@ -2,33 +2,14 @@
 import rospy
 import rospkg
 
-# The name of the parameter to define the environment size.
-# It should be a list `[max_x, max_y]` such that x:[0, `max_x`) and y:[0, `max_y`).
-PARAM_ENVIRONMENT_SIZE = 'config/environment_size'
 
 # The name of a boolean parameter to active random testing.
-# If the value is `False` a keyboard-based interface will be used to produce stimulus 
-# (i.e., speech, gesture and battery signals). Instead, random stimulus will be generate 
-# if `True`. In the latter case, the architecture also requires all the parameters 
+# If the value is `False` stimulus are generated sequentially and equally spaced in time.
+# Instead, stimulus will be generate in a random order and with a random delay if `True`.
+# In the latter case, the architecture also requires all the parameters 
 # with a the scope `test/random_sense/*`, which are not used if `False`.
 PARAM_RANDOM_ACTIVE = 'test/random_sense/active'
 
-
-# The name of parameter to set the initial robot position.
-PARAM_INITIAL_POSE = 'state/initial_pose'
-# ---------------------------------------------------------
-
-
-# The name of the node that detects user's pointing gestures.
-NODE_GESTURE = 'gesture-eval'
-
-# The name of the topic in which the pointing data is published 
-TOPIC_GESTURE = 'sensor/gesture'
-
-# The delay between random pointing gestures.
-# It should be a list `[min_time, max_time]`, and the next gesture
-# will occur after a random number of seconds within such an interval.
-PARAM_GESTURE_TIME = 'test/random_sense/gesture_time'
 # ---------------------------------------------------------
 
 
@@ -90,12 +71,12 @@ TOPIC_STATEMENT = 'map/statement'
 # The name of a boolean parameter to active random generation of statements.
 # If the value is `False` the statements are generated in sequence. 
 # Instead, random statement sequence will be generate if `True`.
-PARAM_RANDOM_STATEMENT_ACTIVE = 'test/random_statements/active'
+PARAM_RANDOM_STATEMENT_ACTIVE = 'test/random_sense/active'
 
 # The delay between statements.
 # It should be a list `[min_time, max_time]`, and the new statement
 # will occur after a random number of seconds within such an interval.
-PARAM_STATEMENT_TIME = 'test/random_statements/statements_time'
+PARAM_STATEMENT_TIME = 'test/random_sense/statement_time'
 # -------------------------------------------------
 
 
@@ -105,6 +86,7 @@ NODE_STATE_MACHINE = 'state_machine'
 # Get the file path for surveillance_robot
 rospack = rospkg.RosPack()
 PATH_TO_PKG = rospack.get_path('surveillance_robot')
+
 # -------------------------------------------------
 
 

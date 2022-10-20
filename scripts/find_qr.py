@@ -2,6 +2,7 @@
 
 import rospy
 import random
+import time
 
 # Import the statements that define the environment.
 from surveillance_robot import environment as env
@@ -25,7 +26,7 @@ def init_msg():
 def main():
 	# Get parameter and initialise this node as well as its publisher.
 	rospy.init_node(anm.NODE_STATEMENT_PUB, log_level=rospy.INFO)
-	randomness = rospy.get_param(anm.PARAM_RANDOM_STATEMENT_ACTIVE, True)
+	randomness = rospy.get_param(anm.PARAM_RANDOM_ACTIVE, True)
 	publisher = rospy.Publisher(anm.TOPIC_STATEMENT, Statement, queue_size=1, latch=True)
 
 	# Log information.
@@ -41,6 +42,9 @@ def main():
 	# If statements must be choosen randomically, shuffle the list of statements.
 	if randomness:
 		random.shuffle(env.statement_list)
+
+	# Wait the state machine to be ready.
+	rospy.sleep(4)
 
 	# For every statement in the statement list.
 	for stat in env.statement_list:
@@ -61,13 +65,20 @@ def main():
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			stat.stated()
 
-			# Wait before the next random message is published.
+			# Simulate the searching of a new qr code with random delay.
 			delay = random.uniform(statement_timing[0], statement_timing[1])
 			rospy.sleep(delay)
 
 
 	endmsg = init_msg()
 	publisher.publish(endmsg)
-			
+
+	log_msg = f'Published all statements found in the environment, exiting in:`'
+	rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+	for i in range(5,0,-1):
+		time.sleep(1)
+		print(i)
+
 if __name__ == '__main__':
     main()
