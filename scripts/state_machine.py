@@ -51,14 +51,13 @@ class Query(smach.State):
 
     def execute(self, userdata):
         # function called when exiting from the node, it can be blocking
+        log_msg = f'Executing state QUERY.'
+        rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
         helper.reason()
         reachable_locations = helper.robot_can_reach()
         next_location = helper.choose_next_location(reachable_locations)
         helper.goal_loc = next_location
-
-        log_msg = f'Executing state QUERY.'
-        rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
         if helper.battery_low:
             return 'battery_low'
@@ -80,7 +79,7 @@ class Move(smach.State):
         rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
         ### move to helper.goal_loc location ###
-        time.sleep(30)
+        time.sleep(2)
 
         helper.update_robot_position()
 

@@ -14,13 +14,7 @@ PARAM_RANDOM_ACTIVE = 'test/random_sense/active'
 
 
 # The name of the node representing the shared knowledge required for this scenario.
-NODE_ROBOT_STATE = 'robot-state'
-
-# The name of the server to get the current robot pose.
-SERVER_GET_POSE = 'state/get_pose'
-
-# The name of the server to set the current robot pose. 
-SERVER_SET_POSE = 'state/set_pose'
+NODE_BATTERY_MANAGER = 'battery-manager'
 
 # The name of the topic where the battery state is published.
 TOPIC_BATTERY_LOW = 'state/battery_low'
