@@ -2,13 +2,16 @@
 import rospy
 import rospkg
 
-
 # The name of a boolean parameter to active random testing.
 # If the value is `False` stimulus are generated sequentially and equally spaced in time.
 # Instead, stimulus will be generate in a random order and with a random delay if `True`.
 # In the latter case, the architecture also requires all the parameters 
 # with a the scope `test/random_sense/*`, which are not used if `False`.
 PARAM_RANDOM_ACTIVE = 'test/random_sense/active'
+
+STARTING_LOCATION = 'E'
+
+RECHARGING_LOCATION = 'E'
 
 # ---------------------------------------------------------
 
@@ -18,6 +21,10 @@ NODE_BATTERY_MANAGER = 'battery-manager'
 
 # The name of the topic where the battery state is published.
 TOPIC_BATTERY_LOW = 'state/battery_low'
+
+SERVICE_RECHARGING = 'state/recharging'
+
+RECHARGING_TIME = 8
 
 # The delay between changes of battery levels, i.e., high/low.
 # It should be a list `[min_time, max_time]`, and the battery level change

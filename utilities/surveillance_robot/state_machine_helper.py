@@ -4,18 +4,16 @@ import rospy
 import re
 import random
 import time
+import actionlib
 
-from armor_api.armor_client import ArmorClient
-from armor_api.armor_utils_client import ArmorUtilsClient
-from armor_api.armor_query_client import ArmorQueryClient
-from armor_api.armor_manipulation_client import ArmorManipulationClient
+from armor_api.armor_client import *
 from threading import Lock
 
 # Import constant name defined to structure the architecture.
 from surveillance_robot import architecture_name_mapper as anm
-
-# Import the custom message Statement
-from surveillance_robot.msg import Statement
+from std_msgs.msg import Bool
+from std_srvs.srv import SetBool, SetBoolRequest
+from surveillance_robot.msg import *
 
 # A tag for identifying logs producer.
 LOG_TAG = anm.NODE_STATE_MACHINE
@@ -38,13 +36,19 @@ class helper():
 
 	def __init__(self):
 		# Initialize class variables
-		self.map_completed = 0   # set to 1 when the ontology is complete
-		self.battery_low = 0     # set to 1 if the battery of the robot is low
-		self._locations = []      # list of location objects
-		self._doors = []          # list of door objects
-		self._corridors = []      # list of corridor objects
-		self.prev_loc = 'E'      # previous location, the robot starts from 'E'
-		self.goal_loc = ''       # goal location of a move action
+		self.map_completed = 0                  # set to 1 when the ontology is complete
+		self.battery_low = False                # set to True if the battery of the robot is low
+		self._locations = []                    # list of location objects
+		self._doors = []                        # list of door objects
+		self._corridors = []                    # list of corridor objects
+		self.waypoints = []
+		self.prev_loc = anm.STARTING_LOCATION   # previous location, initialized with the starting one
+		self.goal_loc = ''                      # goal location of a move action
+		self.mutex_map = Lock()
+		self.mutex_battery = Lock()
+		self.actual_point = Point()
+		self.actual_point.x = 0
+		self.actual_point.y = 0
 
 		# Initialize useful Armor classes.
 		self.client = ArmorClient('mapSurveillance', 'ontoRef')
@@ -55,18 +59,29 @@ class helper():
 		# Load the ontology
 		self.utils.load_ref_from_file(FILE_PATH, IRI, True, 'PELLET', False)
 
-		# Subscribe to the node that provides statements to build the ontology
-		self.subscriber = rospy.Subscriber(anm.TOPIC_STATEMENT, Statement, self.Buildmap_cb)
+		# Subscribe to the topic that provides statements to build the ontology
+		self.statement_sub = rospy.Subscriber(anm.TOPIC_STATEMENT, Statement, self._Buildmap_cb)
+
+		# Subscribe to the topic that controls the battery level
+		self.battery_sub = rospy.Subscriber(anm.TOPIC_BATTERY_LOW, Bool, self._Battery_cb)
+
+		rospy.wait_for_service(anm.SERVICE_RECHARGING)
+		self.client_recharge = rospy.ServiceProxy(anm.SERVICE_RECHARGING, SetBool)
+
+		self.client_planner = actionlib.SimpleActionClient(anm.ACTION_PLANNER, PlanAction)
+		self.client_controller = actionlib.SimpleActionClient(anm.ACTION_CONTROLLER, ControlAction)
 
 		# State the robot initial position
 		self.manipulation.add_objectprop_to_ind('isIn', 'Robot1', self.prev_loc)
 
-	def Buildmap_cb(self, stat):
+	def _Buildmap_cb(self, stat):
 		# Callback to the topic used for building the ontology.
 		# The message received is of kind 'Statement'
 		# If the message received has an empty location, it means that the map is complete
 		if stat.location == '':
+			self.mutex_map.acquire()
 			self.map_completed = 1
+			self.mutex_map.release()
 		else:
 			# Add the statement to the ontology.
 			self.manipulation.add_objectprop_to_ind('hasDoor', stat.location, stat.door)
@@ -81,47 +96,118 @@ class helper():
 			log_msg = f'Statement `Door {stat.door} is in location {stat.location}`added to the ontology.'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
-	def initialize_map(self):
-		# Initialize the ontology. Call this function when all statements have been added to the ontology
-
-		# Disjoint all individuals
-		self.client.call('DISJOINT', 'IND', '', self._locations+self._doors)
-
-		now = str(int(time.time()))   # Current time
-
-		# Start the timer in all locations, when it expires, the location is called URGENT by the reasoner.
-		for loc in self._locations:
-			self.manipulation.add_dataprop_to_ind( 'visitedAt', loc, 'Long', now )
-
-		self.reason()   # Call the reasoner
-
-		# Query the ontology for all corridors
-		self._corridors = self.query.ind_b2_class('CORRIDOR')
-		self._corridors = format(self._corridors, '#', '>')
-
-		log_msg = f'Map initialized, the corridors are: {self._corridors}'
+	def _Battery_cb(self, msg):
+		self.mutex_battery.acquire()
+		self.battery_low = msg.data
+		self.mutex_battery.release()
+		if msg.data == True:
+			log_msg = f'Battery of the robot low, need recharging'
+		if msg.data == False:
+			log_msg = f'Battery of the robot completely charged'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
-		# self.utils.save_ref_with_inferences( anm.PATH_TO_PKG+'/topological_map/builded_map.owl' )
+	def build_the_map(self):
+		r = rospy.Rate(10)  # 10hz
+		while not rospy.is_shutdown():
+		    self.mutex_map.acquire()
+		    try:
+		        if self.map_completed == True:
+		            # Initialize the ontology when all statements have been added to the ontology
 
-	def reason(self):
-		# Reason upon the ontology
+		            # Disjoint all individuals
+		            self.client.call('DISJOINT', 'IND', '', self._locations+self._doors)
+		            now = str(int(time.time()))   # Current time
+		            # Start the timer in all locations, when it expires, the location is called URGENT by the reasoner.
+		            for loc in self._locations:
+		            	self.manipulation.add_dataprop_to_ind( 'visitedAt', loc, 'Long', now )
+		            self.reason()   # Call the reasoner
+		            # Query the ontology for all corridors
+		            self._corridors = self.query.ind_b2_class('CORRIDOR')
+		            self._corridors = format(self._corridors, '#', '>')
+		            log_msg = f'Map initialized, the corridors are: {self._corridors}'
+		            rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+		            return
+		    finally:
+		        self.mutex_map.release()
+		    r.sleep()
 
-		self.utils.apply_buffered_changes()
-		self.utils.sync_buffered_reasoner()
-		# self.client.call('REASON', '', '', [''])
-		
-	def robot_can_reach(self):
-		# Query the ontology and find out which locations can be reached by the robot.
+	def query_the_ontology(self):
+		self.reason()
+
 		can_reach = self.query.objectprop_b2_ind('canReach','Robot1')
 		can_reach = format(can_reach, '#', '>')
 
 		log_msg = f'The robot is in location {self.prev_loc} and can reach {can_reach}.'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
-		return can_reach
+		self.mutex_battery.acquire()
+		try:
+		    if self.battery_low == True and anm.RECHARGING_LOCATION in can_reach:
+		        self.goal_loc = anm.RECHARGING_LOCATION
+		        return 'battery_low'
+		finally:
+		    self.mutex_battery.release()
 
-	def choose_next_location(self, reachable_loc):
+		self.goal_loc = self.surveillance_policy(can_reach)
+		return 'reach_location'
+
+	def recharge(self):
+		req = SetBoolRequest()
+		req.data = True
+		resp = self.client_recharge(req)
+		
+		self.mutex_battery.acquire()
+		self.battery_low = False
+		self.mutex_battery.release()
+
+	def plan_path(self):
+		next_point = Point()
+		next_point.x = random.uniform(0,10)
+		next_point.y = random.uniform(0,10)
+
+		request = PlanActionGoal()
+		request.goal.target = next_point
+		request.goal.actual = self.actual_point
+
+		self.client_planner.wait_for_server()
+		self.client_planner.send_goal(request.goal)
+		self.client_planner.wait_for_result()
+
+		self.waypoints = (self.client_planner.get_result()).via_points
+
+	def control_robot(self):
+		request = ControlActionGoal()
+		request.goal.via_points = self.waypoints
+		self.client_controller.send_goal(request.goal)
+		self.client_controller.wait_for_result()
+		self.actual_point = (self.client_controller.get_result()).reached_point
+
+		self.manipulation.replace_objectprop_b2_ind('isIn', 'Robot1', self.goal_loc, self.prev_loc)
+		self.prev_loc = self.goal_loc   # Update the location
+
+		now = str(int(time.time()))   # Current time
+
+		# Last time that the robot moves
+		before_robot = self.query.dataprop_b2_ind('now', 'Robot1')
+		before_robot = format(before_robot, '"', '"')
+
+		# Update the robot time
+		self.manipulation.replace_dataprop_b2_ind('now', 'Robot1', 'Long', now, before_robot[0])
+
+		# Update the location time when the robot visits it
+		before_loc = self.query.dataprop_b2_ind('visitedAt', self.goal_loc)
+		before_loc = format(before_loc, '"', '"')
+		self.manipulation.replace_dataprop_b2_ind('visitedAt', self.goal_loc, 'Long', now, before_loc[0])
+
+		log_msg = f'The robot has reached location {self.goal_loc} at time {now}'
+		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+	def reason(self):
+		# Reason upon the ontology
+		self.utils.apply_buffered_changes()
+		self.utils.sync_buffered_reasoner()
+
+	def surveillance_policy(self, reachable_loc):
 		# Choose the next location among the reachable ones.
 		# It performs the following surveillance policy:
 		# - It mainly stays on corridors
@@ -149,28 +235,3 @@ class helper():
 
 		# Return a randomic location (because of shuffling them)
 		return reachable_loc[0]
-
-	def update_robot_position(self):
-		# Update the robot position, i.e., change the robot location and accordingly the time stamps of the 
-		# robot and the room
-
-		# Replace the robot property isIn, from the previous location to the goal one
-		self.manipulation.replace_objectprop_b2_ind('isIn', 'Robot1', self.goal_loc, self.prev_loc)
-		self.prev_loc = self.goal_loc   # Update the previous location
-
-		now = str(int(time.time()))   # Current time
-
-		# Last time that the robot moves
-		before_robot = self.query.dataprop_b2_ind('now', 'Robot1')
-		before_robot = format(before_robot, '"', '"')
-
-		# Update the robot time
-		self.manipulation.replace_dataprop_b2_ind('now', 'Robot1', 'Long', now, before_robot[0])
-
-		# Update the location time when the robot visits it
-		before_loc = self.query.dataprop_b2_ind('visitedAt', self.goal_loc)
-		before_loc = format(before_loc, '"', '"')
-		self.manipulation.replace_dataprop_b2_ind('visitedAt', self.goal_loc, 'Long', now, before_loc[0])
-
-		log_msg = f'The robot has reached location {self.goal_loc} at time {now}'
-		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))

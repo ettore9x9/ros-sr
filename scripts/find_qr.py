@@ -2,14 +2,11 @@
 
 import rospy
 import random
-import time
 
 # Import the statements that define the environment.
 from surveillance_robot import environment as env
-
 # Import constant name defined to structure the architecture.
 from surveillance_robot import architecture_name_mapper as anm
-
 # Import the custom message Statement
 from surveillance_robot.msg import Statement
 
@@ -72,13 +69,6 @@ def main():
 
 	endmsg = init_msg()
 	publisher.publish(endmsg)
-
-	log_msg = f'Published all statements found in the environment, exiting in:`'
-	rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-
-	for i in range(5,0,-1):
-		time.sleep(1)
-		print(i)
 
 if __name__ == '__main__':
     main()
