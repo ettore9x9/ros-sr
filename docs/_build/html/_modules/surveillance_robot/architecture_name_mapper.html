@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>surveillance_robot.architecture_name_mapper &mdash; surveillance_robot 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> surveillance_robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">utilities</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">surveillance_robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>surveillance_robot.architecture_name_mapper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for surveillance_robot.architecture_name_mapper</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: architecture_name_mapper</span>
+<span class="sd">  :platform: Unix </span>
+<span class="sd">  :synopsis: Python module for the architecture name mapper</span>
+<span class="sd">.. moduleauthor:: Ettore Sani 5322242@studenti.unige.it</span>
+
+<span class="sd">This module stores the names of all nodes, topics and services of the architecture.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1">### IMPORTS ###</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">rospkg</span>
+
+<span class="c1">### GLOBAL ###</span>
+<span class="c1"># The name of a boolean parameter to active random testing.</span>
+<span class="c1"># If the value is `False` stimulus are generated sequentially and equally spaced in time.</span>
+<span class="c1"># Instead, stimulus will be generate in a random order and with a random delay if `True`.</span>
+<span class="c1"># In the latter case, the architecture also requires all the parameters </span>
+<span class="c1"># with a the scope `test/random_sense/*`, which are not used if `False`.</span>
+<span class="n">PARAM_RANDOM_ACTIVE</span> <span class="o">=</span> <span class="s1">&#39;test/random_sense/active&#39;</span>
+
+<span class="c1"># Name of the location where the robot starts.</span>
+<span class="n">STARTING_LOCATION</span> <span class="o">=</span> <span class="s1">&#39;E&#39;</span>
+
+<span class="c1"># Name of the location where the robot can recharge, it could be different from the starting one.</span>
+<span class="n">RECHARGING_LOCATION</span> <span class="o">=</span> <span class="s1">&#39;E&#39;</span>
+
+<span class="c1"># Initial position of the robot in the 2D space.</span>
+<span class="n">INITIAL_2DPOINT</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]</span>
+
+<span class="c1"># Characteristic dimension of the environment.</span>
+<span class="n">DIMENSION</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="c1"># ---------------------------------------------------------</span>
+
+<span class="c1"># The name of the state machine node</span>
+<span class="n">NODE_STATE_MACHINE</span> <span class="o">=</span> <span class="s1">&#39;state_machine&#39;</span>
+<span class="c1"># ---------------------------------------------------------</span>
+
+<span class="c1"># The name of the node representing the shared knowledge required for this scenario.</span>
+<span class="n">NODE_BATTERY_MANAGER</span> <span class="o">=</span> <span class="s1">&#39;battery_manager&#39;</span>
+
+<span class="c1"># The name of the topic where the battery state is published.</span>
+<span class="n">TOPIC_BATTERY_LOW</span> <span class="o">=</span> <span class="s1">&#39;state/battery_low&#39;</span>
+
+<span class="c1"># The name of the service to recharge the robot&#39;s battery.</span>
+<span class="n">SERVICE_RECHARGING</span> <span class="o">=</span> <span class="s1">&#39;state/recharging&#39;</span>
+
+<span class="c1"># Time needed for recharging completely the robot.</span>
+<span class="n">RECHARGING_TIME</span> <span class="o">=</span> <span class="mi">8</span>
+
+<span class="c1"># The duration of the robot&#39;s battery.</span>
+<span class="c1"># It should be a list `[min_time, max_time]`, and the low battery level</span>
+<span class="c1"># will occur after a random number of seconds within such an interval.</span>
+<span class="n">PARAM_BATTERY_TIME</span> <span class="o">=</span> <span class="s1">&#39;test/random_sense/battery_time&#39;</span>
+<span class="c1"># ---------------------------------------------------------</span>
+
+<span class="c1"># The name of the planner node.</span>
+<span class="n">NODE_PLANNER</span> <span class="o">=</span> <span class="s1">&#39;planner&#39;</span>
+
+<span class="c1"># The name of the action server solving the motion planning problem.</span>
+<span class="n">ACTION_PLANNER</span> <span class="o">=</span> <span class="s1">&#39;motion/planner&#39;</span>
+
+<span class="c1"># The number of points in the plan. It should be a list `[min_n, max_n]`,</span>
+<span class="c1"># Where the number of points is a random value in the interval [`min_n`, `max_n`).</span>
+<span class="n">PARAM_PLANNER_POINTS</span> <span class="o">=</span> <span class="s1">&#39;test/random_plan_points&#39;</span>
+
+<span class="c1"># The delay between the computation of the next via points.</span>
+<span class="c1"># It should be a list `[min_time, max_time]`, and the computation will </span>
+<span class="c1"># last for a random number of seconds in such an interval.</span>
+<span class="n">PARAM_PLANNER_TIME</span> <span class="o">=</span> <span class="s1">&#39;test/random_plan_time&#39;</span>
+<span class="c1"># -------------------------------------------------</span>
+
+<span class="c1"># The name of the controller node.</span>
+<span class="n">NODE_CONTROLLER</span> <span class="o">=</span> <span class="s1">&#39;controller&#39;</span>
+
+<span class="c1"># The name of the action server solving the motion control problem.</span>
+<span class="n">ACTION_CONTROLLER</span> <span class="o">=</span> <span class="s1">&#39;motion/controller&#39;</span>
+
+<span class="c1"># The time required to reach a via points.</span>
+<span class="c1"># It should be a list `[min_time, max_time]`, and the time to reach a</span>
+<span class="c1"># via point will be a random number of seconds in such an interval.</span>
+<span class="n">PARAM_CONTROLLER_TIME</span> <span class="o">=</span> <span class="s1">&#39;test/random_motion_time&#39;</span>
+<span class="c1"># -------------------------------------------------</span>
+
+<span class="c1"># The name of the node that publishes the statements about the environment.</span>
+<span class="n">NODE_STATEMENT_PUB</span> <span class="o">=</span> <span class="s1">&#39;statement_pub&#39;</span>
+
+<span class="c1"># The name of the topic where the statements are published.</span>
+<span class="n">TOPIC_STATEMENT</span> <span class="o">=</span> <span class="s1">&#39;map/statement&#39;</span>
+
+<span class="c1"># The name of a boolean parameter to active random generation of statements.</span>
+<span class="c1"># If the value is `False` the statements are generated in sequence. </span>
+<span class="c1"># Instead, random statement sequence will be generate if `True`.</span>
+<span class="n">PARAM_RANDOM_STATEMENT_ACTIVE</span> <span class="o">=</span> <span class="s1">&#39;test/random_sense/active&#39;</span>
+
+<span class="c1"># The delay between statements.</span>
+<span class="c1"># It should be a list `[min_time, max_time]`, and the new statement</span>
+<span class="c1"># will occur after a random number of seconds within such an interval.</span>
+<span class="n">PARAM_STATEMENT_TIME</span> <span class="o">=</span> <span class="s1">&#39;test/random_sense/statement_time&#39;</span>
+<span class="c1"># -------------------------------------------------</span>
+
+<span class="c1"># Get the file path for surveillance_robot.</span>
+<span class="n">rospack</span> <span class="o">=</span> <span class="n">rospkg</span><span class="o">.</span><span class="n">RosPack</span><span class="p">()</span>
+
+<span class="c1"># The absolute path to the surveillance_robot package.</span>
+<span class="n">PATH_TO_PKG</span> <span class="o">=</span> <span class="n">rospack</span><span class="o">.</span><span class="n">get_path</span><span class="p">(</span><span class="s1">&#39;surveillance_robot&#39;</span><span class="p">)</span>
+
+<span class="c1"># Useful information to load the ontology</span>
+<span class="n">FILE_PATH</span> <span class="o">=</span> <span class="n">PATH_TO_PKG</span><span class="o">+</span><span class="s1">&#39;/topological_map/topological_map.owl&#39;</span>
+<span class="n">IRI</span> <span class="o">=</span> <span class="s1">&#39;http://bnc/exp-rob-lab/2022-23&#39;</span>
+
+<span class="c1"># -------------------------------------------------</span>
+
+<span class="c1">### FUNCTIONS ###</span>
+<div class="viewcode-block" id="tag_log"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.architecture_name_mapper.tag_log">[docs]</a><span class="k">def</span> <span class="nf">tag_log</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">producer_tag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function used to label each log with a producer tag.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        msg (str): message to print on screen</span>
+<span class="sd">        producer_tag (str): tag name of the producer of the message</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        string (str): formatted string</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;@</span><span class="si">%s</span><span class="s1">&gt;&gt; </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">producer_tag</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Ettore Sani.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

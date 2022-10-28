@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts &mdash; surveillance_robot 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="utilities" href="utilities.html" />
+    <link rel="prev" title="Welcome to surveillance_robot’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> surveillance_robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-scripts.battery_manager">Battery Manager module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.battery_manager.BatteryManager"><code class="docutils literal notranslate"><span class="pre">BatteryManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.battery_manager.BatteryManager._is_battery_low"><code class="docutils literal notranslate"><span class="pre">BatteryManager._is_battery_low()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.battery_manager.BatteryManager._manual_battery_notifier"><code class="docutils literal notranslate"><span class="pre">BatteryManager._manual_battery_notifier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.battery_manager.BatteryManager._random_battery_notifier"><code class="docutils literal notranslate"><span class="pre">BatteryManager._random_battery_notifier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.battery_manager.BatteryManager.recharging"><code class="docutils literal notranslate"><span class="pre">BatteryManager.recharging()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.battery_manager.loading_bar"><code class="docutils literal notranslate"><span class="pre">loading_bar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.battery_manager.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-scripts.controller">Controller module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.controller.ControllingAction"><code class="docutils literal notranslate"><span class="pre">ControllingAction</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.controller.ControllingAction.execute_callback"><code class="docutils literal notranslate"><span class="pre">ControllingAction.execute_callback()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.controller.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-scripts.find_qr">Find Qr module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.find_qr.init_msg"><code class="docutils literal notranslate"><span class="pre">init_msg()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.find_qr.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-scripts.planner">Planner module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.planner.PlanningAction"><code class="docutils literal notranslate"><span class="pre">PlanningAction</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.planner.PlanningAction.execute_callback"><code class="docutils literal notranslate"><span class="pre">PlanningAction.execute_callback()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.planner.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-scripts.state_machine">State Machine module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.state_machine.Buildmap"><code class="docutils literal notranslate"><span class="pre">Buildmap</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.state_machine.Buildmap.execute"><code class="docutils literal notranslate"><span class="pre">Buildmap.execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.state_machine.Controller"><code class="docutils literal notranslate"><span class="pre">Controller</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.state_machine.Controller.execute"><code class="docutils literal notranslate"><span class="pre">Controller.execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.state_machine.Planner"><code class="docutils literal notranslate"><span class="pre">Planner</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.state_machine.Planner.execute"><code class="docutils literal notranslate"><span class="pre">Planner.execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.state_machine.Query"><code class="docutils literal notranslate"><span class="pre">Query</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.state_machine.Query.execute"><code class="docutils literal notranslate"><span class="pre">Query.execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.state_machine.WaitFull"><code class="docutils literal notranslate"><span class="pre">WaitFull</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scripts.state_machine.WaitFull.execute"><code class="docutils literal notranslate"><span class="pre">WaitFull.execute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.state_machine.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">utilities</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">surveillance_robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>scripts</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/scripts.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="scripts">
+<h1>scripts<a class="headerlink" href="#scripts" title="Permalink to this heading"></a></h1>
+<div class="section" id="module-scripts.battery_manager">
+<span id="battery-manager-module"></span><h2>Battery Manager module<a class="headerlink" href="#module-scripts.battery_manager" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-battery_manager"></span><p>This module implements the battery_manager node of the architecture, publishing a message when the robot has low battery and prividing a service for recharging it when at the base.</p>
+<dl class="simple">
+<dt>Publishes to:</dt><dd><p>/state/battery_low</p>
+</dd>
+<dt>Service:</dt><dd><p>/state/recharging</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.battery_manager.BatteryManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.battery_manager.</span></span><span class="sig-name descname"><span class="pre">BatteryManager</span></span><a class="reference internal" href="_modules/scripts/battery_manager.html#BatteryManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.battery_manager.BatteryManager" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class is the battery manager of the robot. It publishes when the battery of the robot is low,
+and provides a service to recharge it.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.battery_manager.BatteryManager._is_battery_low">
+<span class="sig-name descname"><span class="pre">_is_battery_low</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/battery_manager.html#BatteryManager._is_battery_low"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.battery_manager.BatteryManager._is_battery_low" title="Permalink to this definition"></a></dt>
+<dd><p>Publisher of the battery level. It runs on a separate thread ad publishes when the robot has low battery.
+Depending on the modality, the battery low can be triggered randomically or by an user input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.battery_manager.BatteryManager._manual_battery_notifier">
+<span class="sig-name descname"><span class="pre">_manual_battery_notifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">publisher</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/battery_manager.html#BatteryManager._manual_battery_notifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.battery_manager.BatteryManager._manual_battery_notifier" title="Permalink to this definition"></a></dt>
+<dd><p>Function to publish when the battery becames low, based on a user keyboard interaction.
+The message is published through the <cite>publisher</cite> input parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>publisher</strong> (<em>rospy.Publisher</em>) – publisher to the battery low topic</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.battery_manager.BatteryManager._random_battery_notifier">
+<span class="sig-name descname"><span class="pre">_random_battery_notifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">publisher</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/battery_manager.html#BatteryManager._random_battery_notifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.battery_manager.BatteryManager._random_battery_notifier" title="Permalink to this definition"></a></dt>
+<dd><p>Function to publish when the battery becames low, based on a random delay within the interval
+[<cite>self._random_battery_time[0]</cite>, <cite>self._random_battery_time[1]</cite>). The message is published through
+the <cite>publisher</cite> input parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>publisher</strong> (<em>rospy.Publisher</em>) – publisher to the battery low topic</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.battery_manager.BatteryManager.recharging">
+<span class="sig-name descname"><span class="pre">recharging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/battery_manager.html#BatteryManager.recharging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.battery_manager.BatteryManager.recharging" title="Permalink to this definition"></a></dt>
+<dd><p>Service callback to recharge the robot. It waits for a specified recharging time updating the loading bar,
+then returns the success of the operation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.battery_manager.loading_bar">
+<span class="sig-prename descclassname"><span class="pre">scripts.battery_manager.</span></span><span class="sig-name descname"><span class="pre">loading_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/battery_manager.html#loading_bar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.battery_manager.loading_bar" title="Permalink to this definition"></a></dt>
+<dd><p>Function to print a loading bar.
+Graphical feature that prints a loading bar that rapresents the percentage of the battery recharging.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percent</strong> (<em>float</em>) – Actual state of recharging.</p></li>
+<li><p><strong>size</strong> (<em>float</em>) – Size of total recharging.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.battery_manager.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.battery_manager.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/battery_manager.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.battery_manager.main" title="Permalink to this definition"></a></dt>
+<dd><p>This function initializes the battery_manager ros node.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.controller">
+<span id="controller-module"></span><h2>Controller module<a class="headerlink" href="#module-scripts.controller" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-controller"></span><p>This module simulates the controller node of the architecture. It implements a service that, provided the waypoints, controls the robot trajectory passing through them.</p>
+<dl class="simple">
+<dt>Service:</dt><dd><p>/motion/controller</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.controller.ControllingAction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.controller.</span></span><span class="sig-name descname"><span class="pre">ControllingAction</span></span><a class="reference internal" href="_modules/scripts/controller.html#ControllingAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.controller.ControllingAction" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class implements an action server to simulate motion controlling.
+Given a plan as a set of via points, it simulate the movements to reach each point with a random delay.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.controller.ControllingAction.execute_callback">
+<span class="sig-name descname"><span class="pre">execute_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">goal</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/controller.html#ControllingAction.execute_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.controller.ControllingAction.execute_callback" title="Permalink to this definition"></a></dt>
+<dd><p>Callback function invoked when a client set a goal to the <cite>controller</cite> server.
+This function requires a list of via points (i.e., the plan), and it simulate a movement through each
+point with a delay spanning in [‘self._random_motion_time[0]`, <cite>self._random_motion_time[1]</cite>).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.controller.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.controller.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/controller.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.controller.main" title="Permalink to this definition"></a></dt>
+<dd><p>This function initializes the controller ros node.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.find_qr">
+<span id="find-qr-module"></span><h2>Find Qr module<a class="headerlink" href="#module-scripts.find_qr" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-find_qr"></span><p>This module implements the find_qr node of the architecture, that simulates the acquisition of the knowledge of the surrounding environment by the robot. It uses the module <a class="reference internal" href="utilities.html#module-environment" title="environment: Python module that simulates the environment (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">environment</span></code></a> for the knowledge of doors and locations, publishes them and exits.</p>
+<dl class="simple">
+<dt>Publishes to:</dt><dd><p>/map/statement</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.find_qr.init_msg">
+<span class="sig-prename descclassname"><span class="pre">scripts.find_qr.</span></span><span class="sig-name descname"><span class="pre">init_msg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/find_qr.html#init_msg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.find_qr.init_msg" title="Permalink to this definition"></a></dt>
+<dd><p>Function to initialize a new message with the actual time stamp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Initialized message.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>msg (Statement)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.find_qr.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.find_qr.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/find_qr.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.find_qr.main" title="Permalink to this definition"></a></dt>
+<dd><p>This function initializes the find_qr ros node. Relying on the informations stored in the
+<a class="reference internal" href="utilities.html#module-surveillance_robot.environment" title="surveillance_robot.environment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">surveillance_robot.environment</span></code></a> module, it publishes one statement at a time, with a random
+delay between them in a range specified by the PARAM_STATEMENT_TIME.
+After that all statements have been pulished, it publishes an empty statement, then exits.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.planner">
+<span id="planner-module"></span><h2>Planner module<a class="headerlink" href="#module-scripts.planner" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-planner"></span><p>This module simulates the planner node of the architecture. It implements a service that, provided the initial position, plans a variable number of waypoints to reach the goal position.</p>
+<dl class="simple">
+<dt>Service:</dt><dd><p>/motion/planner</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.planner.PlanningAction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.planner.</span></span><span class="sig-name descname"><span class="pre">PlanningAction</span></span><a class="reference internal" href="_modules/scripts/planner.html#PlanningAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.planner.PlanningAction" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class implements an action server to simulate motion planning.
+Given an initial and a target position, it returns a plan as a set of via points.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.planner.PlanningAction.execute_callback">
+<span class="sig-name descname"><span class="pre">execute_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">goal</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/planner.html#PlanningAction.execute_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.planner.PlanningAction.execute_callback" title="Permalink to this definition"></a></dt>
+<dd><p>Callback function invoked when a client set a goal to the <cite>planner</cite> server.
+This function will return a list of random points (i.e., the plan) when the fist point
+is the current robot position, while the last point is the <cite>goal</cite> position. The plan will contain
+a random number of other points, which spans in the range
+[<cite>self._random_plan_points[0]</cite>, <cite>self._random_plan_points[1]</cite>). To simulate computation,
+each point is added to the plan with a random delay spanning in the range
+[<cite>self._random_plan_time[0]</cite>, <cite>self._random_plan_time[1]</cite>).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.planner.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.planner.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/planner.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.planner.main" title="Permalink to this definition"></a></dt>
+<dd><p>This function initializes the planner ros node.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.state_machine">
+<span id="state-machine-module"></span><h2>State Machine module<a class="headerlink" href="#module-scripts.state_machine" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-state_machine"></span><p>This module implements the state_machine node of the architecture, managing the transition between states.
+All subscriptions and service requests are managed by the class helper of the module <a class="reference internal" href="utilities.html#module-state_machine_helper" title="state_machine_helper: Python module for the helper class, used by the module :mod:`state_machine` (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">state_machine_helper</span></code></a>, as well as the ontology and the surveillance policy.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.Buildmap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">Buildmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Buildmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Buildmap" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></p>
+<p>This class defines the state Buildmap of the state machine.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.Buildmap.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Buildmap.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Buildmap.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Called when executing the state Buildmap.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>transition to the next state.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.Controller">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">Controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Controller" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></p>
+<p>This class defines the state Controller of the state machine.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.Controller.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Controller.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Controller.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Called when executing the state Controller.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>transition to the next state.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.Planner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">Planner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Planner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Planner" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></p>
+<p>This class defines the state Planner of the state machine.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.Planner.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Planner.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Planner.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Called when executing the state Planner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>transition to the next state.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.Query">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">Query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Query" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></p>
+<p>This class defines the state Query of the state machine.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.Query.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Query.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Query.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Called when executing the state Query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>transition to the next state.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.WaitFull">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">WaitFull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#WaitFull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.WaitFull" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></p>
+<p>This class defines the state WaitFull of the state machine.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.WaitFull.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#WaitFull.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.WaitFull.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Called when executing the state WaitFull.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>transition to the next state.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.state_machine.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.main" title="Permalink to this definition"></a></dt>
+<dd><p>This function initializes the ROS node state_machine.
+It creates a SMACH state machine and two nested sub-state machines,
+by relying on the <a class="reference external" href="http://wiki.ros.org/smach/">smach</a> module.
+An instance of the <a class="reference internal" href="utilities.html#surveillance_robot.state_machine_helper.helper" title="surveillance_robot.state_machine_helper.helper"><code class="xref py py-class docutils literal notranslate"><span class="pre">surveillance_robot.state_machine_helper.helper</span></code></a> class is passed to every state.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to surveillance_robot’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="utilities.html" class="btn btn-neutral float-right" title="utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Ettore Sani.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

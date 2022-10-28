@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>utilities &mdash; surveillance_robot 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="scripts" href="scripts.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> surveillance_robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">scripts</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-surveillance_robot.architecture_name_mapper">Architecture Name Mapper module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#surveillance_robot.architecture_name_mapper.tag_log"><code class="docutils literal notranslate"><span class="pre">tag_log()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-surveillance_robot.environment">Environment module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#surveillance_robot.environment.statement"><code class="docutils literal notranslate"><span class="pre">statement</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.environment.statement.stated"><code class="docutils literal notranslate"><span class="pre">statement.stated()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-surveillance_robot.state_machine_helper">State Machine Helper module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#surveillance_robot.state_machine_helper.format"><code class="docutils literal notranslate"><span class="pre">format()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper"><code class="docutils literal notranslate"><span class="pre">helper</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper._Battery_cb"><code class="docutils literal notranslate"><span class="pre">helper._Battery_cb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper._Buildmap_cb"><code class="docutils literal notranslate"><span class="pre">helper._Buildmap_cb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper.build_the_map"><code class="docutils literal notranslate"><span class="pre">helper.build_the_map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper.control_robot"><code class="docutils literal notranslate"><span class="pre">helper.control_robot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper.plan_path"><code class="docutils literal notranslate"><span class="pre">helper.plan_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper.query_the_ontology"><code class="docutils literal notranslate"><span class="pre">helper.query_the_ontology()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper.reason"><code class="docutils literal notranslate"><span class="pre">helper.reason()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper.recharge"><code class="docutils literal notranslate"><span class="pre">helper.recharge()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#surveillance_robot.state_machine_helper.helper.surveillance_policy"><code class="docutils literal notranslate"><span class="pre">helper.surveillance_policy()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">surveillance_robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>utilities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/utilities.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="utilities">
+<h1>utilities<a class="headerlink" href="#utilities" title="Permalink to this heading"></a></h1>
+<div class="section" id="module-surveillance_robot.architecture_name_mapper">
+<span id="architecture-name-mapper-module"></span><h2>Architecture Name Mapper module<a class="headerlink" href="#module-surveillance_robot.architecture_name_mapper" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-architecture_name_mapper"></span><p>This module stores the names of all nodes, topics and services of the architecture.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="surveillance_robot.architecture_name_mapper.tag_log">
+<span class="sig-prename descclassname"><span class="pre">surveillance_robot.architecture_name_mapper.</span></span><span class="sig-name descname"><span class="pre">tag_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">producer_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/architecture_name_mapper.html#tag_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.architecture_name_mapper.tag_log" title="Permalink to this definition"></a></dt>
+<dd><p>Function used to label each log with a producer tag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>msg</strong> (<em>str</em>) – message to print on screen</p></li>
+<li><p><strong>producer_tag</strong> (<em>str</em>) – tag name of the producer of the message</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>formatted string</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>string (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-surveillance_robot.environment">
+<span id="environment-module"></span><h2>Environment module<a class="headerlink" href="#module-surveillance_robot.environment" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-environment"></span><p>This module stores the knowledge about the environment that the <a class="reference internal" href="scripts.html#module-find_qr" title="find_qr: Python module for the node that finds qr codes in the environment (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">find_qr</span></code></a> module discovers.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="surveillance_robot.environment.statement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">surveillance_robot.environment.</span></span><span class="sig-name descname"><span class="pre">statement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">door</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/environment.html#statement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.environment.statement" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class represents a statement of the environment.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.environment.statement.stated">
+<span class="sig-name descname"><span class="pre">stated</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/environment.html#statement.stated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.environment.statement.stated" title="Permalink to this definition"></a></dt>
+<dd><p>Function to call when the statement have been stated.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-surveillance_robot.state_machine_helper">
+<span id="state-machine-helper-module"></span><h2>State Machine Helper module<a class="headerlink" href="#module-surveillance_robot.state_machine_helper" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-state_machine_helper"></span><p>This module manages subscribers and client requests for the module <a class="reference internal" href="scripts.html#module-state_machine" title="state_machine: Python module for the state machine implementation (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">state_machine</span></code></a> through the helper class.
+It provides several useful methods to exchange information with the ontology, thanks to the api provided by the <a class="reference external" href="https://github.com/EmaroLab/armor_py_api">*armor_api*</a> library.
+This module has several interfaces with orther modules, such as <a class="reference internal" href="scripts.html#module-battery_manager" title="battery_manager: Python module for the battery manager node (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">battery_manager</span></code></a>, <a class="reference internal" href="scripts.html#module-find_qr" title="find_qr: Python module for the node that finds qr codes in the environment (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">find_qr</span></code></a>, <a class="reference internal" href="scripts.html#module-planner" title="planner: Python module for the node that plans the robot's trajectory (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">planner</span></code></a> and <a class="reference internal" href="scripts.html#module-controller" title="controller: Python module for the node that controls the robot's trajectory (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">controller</span></code></a> modules.</p>
+<dl class="simple">
+<dt>Subscribes to:</dt><dd><p>/map/statement
+/state/battery_low</p>
+</dd>
+<dt>Client of:</dt><dd><p>/state/recharging</p>
+</dd>
+<dt>Action client of:</dt><dd><p>/motion/planner
+/motion/controller</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.format">
+<span class="sig-prename descclassname"><span class="pre">surveillance_robot.state_machine_helper.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">oldlist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.format" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Function to format a list of strings.</dt><dd><p>It cuts the elements of the old list between the start and end characters, returning the formatted list.
+It relies on the <a class="reference external" href="https://docs.python.org/3/library/re.html">re</a> python library.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>oldlist</strong> (<em>str</em><em>[</em><em>]</em>) – The old list of strings to format.</p></li>
+<li><p><strong>start</strong> (<em>char</em>) – Starting character to start cutting in every string.</p></li>
+<li><p><strong>end</strong> (<em>char</em>) – Ending character to end cutting in every string.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The formatted list of strings.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>newlist (str[])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">surveillance_robot.state_machine_helper.</span></span><span class="sig-name descname"><span class="pre">helper</span></span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class is the state machine helper. It stores useful variables, functions and ros callbacks.
+It is widely used by the <a class="reference internal" href="scripts.html#module-scripts.state_machine" title="scripts.state_machine"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scripts.state_machine</span></code></a> module.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper._Battery_cb">
+<span class="sig-name descname"><span class="pre">_Battery_cb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper._Battery_cb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper._Battery_cb" title="Permalink to this definition"></a></dt>
+<dd><p>Callback of the topic <em>/state/battery_low</em>, that triggers when the robot needs to recharge
+or when the robot is completely charged. It changes the battery_low flag accordingly with the
+message received.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper._Buildmap_cb">
+<span class="sig-name descname"><span class="pre">_Buildmap_cb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stat</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper._Buildmap_cb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper._Buildmap_cb" title="Permalink to this definition"></a></dt>
+<dd><p>Callback of the topic <em>/map/statement</em> used for building the ontology.
+The message received is of kind ‘Statement’ and contains a location coupled with a door.
+If the message is empty, it means that the map is completed, so it reises the map_completed flag.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper.build_the_map">
+<span class="sig-name descname"><span class="pre">build_the_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.build_the_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.build_the_map" title="Permalink to this definition"></a></dt>
+<dd><p>Function used by the <a class="reference internal" href="scripts.html#scripts.state_machine.Buildmap" title="scripts.state_machine.Buildmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">scripts.state_machine.Buildmap</span></code></a> class; it waits until the
+map is completed, than disjoints all individuals in the ontology, asks the reasoner to reason with
+the given ontology and queries it for locations that are corridors.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper.control_robot">
+<span class="sig-name descname"><span class="pre">control_robot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.control_robot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.control_robot" title="Permalink to this definition"></a></dt>
+<dd><p>Function used by the <a class="reference internal" href="scripts.html#scripts.state_machine.Controller" title="scripts.state_machine.Controller"><code class="xref py py-class docutils literal notranslate"><span class="pre">scripts.state_machine.Controller</span></code></a> class; it makes a request to the action
+service that controls the robot through viapoints. It waits until the goal point has been reached, updates
+the ontology and then exits.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper.plan_path">
+<span class="sig-name descname"><span class="pre">plan_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.plan_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.plan_path" title="Permalink to this definition"></a></dt>
+<dd><p>Function used by the <a class="reference internal" href="scripts.html#scripts.state_machine.Planner" title="scripts.state_machine.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">scripts.state_machine.Planner</span></code></a> class; it makes a request to the action
+service that plan the viapoints between the actual and the goal positions. The goal position is choosen
+randomically. It waits until the path is planned, then exits.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper.query_the_ontology">
+<span class="sig-name descname"><span class="pre">query_the_ontology</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.query_the_ontology"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.query_the_ontology" title="Permalink to this definition"></a></dt>
+<dd><p>Function used by the <a class="reference internal" href="scripts.html#scripts.state_machine.Query" title="scripts.state_machine.Query"><code class="xref py py-class docutils literal notranslate"><span class="pre">scripts.state_machine.Query</span></code></a> class; it asks the ontology about the
+locations that the robot can reach and chooses one of them according to the battery level of the robot
+and on the surveillance policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>string to have a battery_low transition
+‘reach_location’ (str): string to have a reach_location transition</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>‘battery_low’ (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper.reason">
+<span class="sig-name descname"><span class="pre">reason</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.reason"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.reason" title="Permalink to this definition"></a></dt>
+<dd><p>Function to make the reasoner reason concerning the ontology.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper.recharge">
+<span class="sig-name descname"><span class="pre">recharge</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.recharge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.recharge" title="Permalink to this definition"></a></dt>
+<dd><p>Function used by the <a class="reference internal" href="scripts.html#scripts.state_machine.WaitFull" title="scripts.state_machine.WaitFull"><code class="xref py py-class docutils literal notranslate"><span class="pre">scripts.state_machine.WaitFull</span></code></a> class; it makes a request to the
+service that recharges the battery. This service is blocking, and returns only when the battery is fully charged.
+Then, it puts down the battery_low flag.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="surveillance_robot.state_machine_helper.helper.surveillance_policy">
+<span class="sig-name descname"><span class="pre">surveillance_policy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reachable_loc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.surveillance_policy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.surveillance_policy" title="Permalink to this definition"></a></dt>
+<dd><p>Function to choose the next location among the reachable ones.
+It performs the following surveillance policy:
+- It mainly stays on corridors
+- If a reachable location is URGENT, it should visit it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>reachable_loc</strong> (<em>str</em><em>[</em><em>]</em>) – list of reachable locations</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>choosen location among the reachable ones</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>loc (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="scripts.html" class="btn btn-neutral float-left" title="scripts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Ettore Sani.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

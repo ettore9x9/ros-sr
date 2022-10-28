@@ -6,6 +6,7 @@ project(surveillance_robot)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  std_srvs
   actionlib_msgs
   message_generation
   armor

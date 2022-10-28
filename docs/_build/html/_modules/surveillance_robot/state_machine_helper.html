@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>surveillance_robot.state_machine_helper &mdash; surveillance_robot 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> surveillance_robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">utilities</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">surveillance_robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>surveillance_robot.state_machine_helper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for surveillance_robot.state_machine_helper</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: state_machine_helper</span>
+<span class="sd">  :platform: Unix </span>
+<span class="sd">  :synopsis: Python module for the helper class, used by the module :mod:`state_machine`</span>
+<span class="sd">.. moduleauthor:: Ettore Sani 5322242@studenti.unige.it</span>
+
+<span class="sd">This module manages subscribers and client requests for the module :mod:`state_machine` through the helper class.</span>
+<span class="sd">It provides several useful methods to exchange information with the ontology, thanks to the api provided by the `*armor_api* &lt;https://github.com/EmaroLab/armor_py_api&gt;`_ library.</span>
+<span class="sd">This module has several interfaces with orther modules, such as :mod:`battery_manager`, :mod:`find_qr`, :mod:`planner` and :mod:`controller` modules.</span>
+
+<span class="sd">Subscribes to:</span>
+<span class="sd">  /map/statement</span>
+<span class="sd">  /state/battery_low</span>
+
+<span class="sd">Client of:</span>
+<span class="sd">  /state/recharging</span>
+
+<span class="sd">Action client of:</span>
+<span class="sd">  /motion/planner</span>
+<span class="sd">  /motion/controller</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1">### IMPORTS ###</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">actionlib</span>
+
+<span class="kn">from</span> <span class="nn">armor_api.armor_client</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Lock</span>
+<span class="kn">from</span> <span class="nn">surveillance_robot</span> <span class="kn">import</span> <span class="n">architecture_name_mapper</span> <span class="k">as</span> <span class="n">anm</span>
+
+<span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="kn">import</span> <span class="n">Bool</span>
+<span class="kn">from</span> <span class="nn">std_srvs.srv</span> <span class="kn">import</span> <span class="n">SetBool</span><span class="p">,</span> <span class="n">SetBoolRequest</span>
+<span class="kn">from</span> <span class="nn">surveillance_robot.msg</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">### GLOBAL ###</span>
+<span class="n">LOG_TAG</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">NODE_STATE_MACHINE</span>   <span class="c1"># Tag for identifying logs producer.</span>
+
+<span class="c1">### FUNCTIONS ###</span>
+<div class="viewcode-block" id="format"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.format">[docs]</a><span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="n">oldlist</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Function to format a list of strings.</span>
+<span class="sd">	It cuts the elements of the old list between the start and end characters, returning the formatted list.</span>
+<span class="sd">	It relies on the `re &lt;https://docs.python.org/3/library/re.html&gt;`_ python library.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">       oldlist (str[]): The old list of strings to format.</span>
+<span class="sd">       start (char): Starting character to start cutting in every string.</span>
+<span class="sd">       end (char): Ending character to end cutting in every string.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">       newlist (str[]): The formatted list of strings.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+	<span class="n">newlist</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">string</span> <span class="ow">in</span> <span class="n">oldlist</span><span class="p">:</span>
+		<span class="n">newlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">start</span><span class="o">+</span><span class="s1">&#39;(.+?)&#39;</span><span class="o">+</span><span class="n">end</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+	<span class="k">return</span> <span class="n">newlist</span></div>
+
+<span class="c1">### CLASSES ###</span>
+<div class="viewcode-block" id="helper"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper">[docs]</a><span class="k">class</span> <span class="nc">helper</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;This class is the state machine helper. It stores useful variables, functions and ros callbacks.</span>
+<span class="sd">	It is widely used by the :mod:`scripts.state_machine` module.</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="c1"># Initialize variables.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">map_completed</span> <span class="o">=</span> <span class="kc">False</span>              <span class="c1"># set to True when the ontology is complete</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">=</span> <span class="kc">False</span>                <span class="c1"># set to True if the battery of the robot is low</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_locations</span> <span class="o">=</span> <span class="p">[]</span>                    <span class="c1"># list of location objects</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_doors</span> <span class="o">=</span> <span class="p">[]</span>                        <span class="c1"># list of door objects</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_corridors</span> <span class="o">=</span> <span class="p">[]</span>                    <span class="c1"># list of corridor objects</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">waypoints</span> <span class="o">=</span> <span class="p">[]</span>                     <span class="c1"># list of waypoints to reach the next location</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                      <span class="c1"># goal location of a move action</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex_map</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>                 <span class="c1"># mutex for the self.map_completed variable</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex_battery</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>             <span class="c1"># mutex for the self.battery low variable</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">actual_point</span> <span class="o">=</span> <span class="n">Point</span><span class="p">()</span>             <span class="c1"># 2D point of the robot in the environment</span>
+
+		<span class="c1"># Get the starting 2D position and location.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">actual_point</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">INITIAL_2DPOINT</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># starting x coordinate</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">actual_point</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">INITIAL_2DPOINT</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>   <span class="c1"># starting y coordinate</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">prev_loc</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">STARTING_LOCATION</span>          <span class="c1"># starting location</span>
+
+		<span class="c1"># Initialize useful Armor classes.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">ArmorClient</span><span class="p">(</span><span class="s1">&#39;mapSurveillance&#39;</span><span class="p">,</span> <span class="s1">&#39;ontoRef&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">utils</span> <span class="o">=</span> <span class="n">ArmorUtilsClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="n">ArmorQueryClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">manipulation</span> <span class="o">=</span> <span class="n">ArmorManipulationClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+
+		<span class="c1"># Load the ontology.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_ref_from_file</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">FILE_PATH</span><span class="p">,</span> <span class="n">anm</span><span class="o">.</span><span class="n">IRI</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;PELLET&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+		<span class="c1"># Subscribe to the topic that provides statements to build the ontology.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">statement_sub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_STATEMENT</span><span class="p">,</span> <span class="n">Statement</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Buildmap_cb</span><span class="p">)</span>
+
+		<span class="c1"># Subscribe to the topic that controls the battery level.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">battery_sub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_BATTERY_LOW</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Battery_cb</span><span class="p">)</span>
+
+		<span class="c1"># Create a client for the recharging service.</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">SERVICE_RECHARGING</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_recharge</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">SERVICE_RECHARGING</span><span class="p">,</span> <span class="n">SetBool</span><span class="p">)</span>
+
+		<span class="c1"># Create an action client for the planner action service.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_planner</span> <span class="o">=</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">SimpleActionClient</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">ACTION_PLANNER</span><span class="p">,</span> <span class="n">PlanAction</span><span class="p">)</span>
+
+		<span class="c1"># Create an action client for the controller action service.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_controller</span> <span class="o">=</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">SimpleActionClient</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">ACTION_CONTROLLER</span><span class="p">,</span> <span class="n">ControlAction</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_controller</span><span class="o">.</span><span class="n">wait_for_server</span><span class="p">()</span>
+
+		<span class="c1"># State the robot initial position</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_objectprop_to_ind</span><span class="p">(</span><span class="s1">&#39;isIn&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_loc</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_planner</span><span class="o">.</span><span class="n">wait_for_server</span><span class="p">()</span>
+
+<div class="viewcode-block" id="helper._Buildmap_cb"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper._Buildmap_cb">[docs]</a>	<span class="k">def</span> <span class="nf">_Buildmap_cb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Callback of the topic */map/statement* used for building the ontology.</span>
+<span class="sd">		The message received is of kind &#39;Statement&#39; and contains a location coupled with a door.</span>
+<span class="sd">		If the message is empty, it means that the map is completed, so it reises the map_completed flag.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># If the message has an empty location.</span>
+		<span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">location</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">mutex_map</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>    <span class="c1"># take the map mutex</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">map_completed</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># the map is completed</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">mutex_map</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>    <span class="c1"># release the map mutex</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c1"># Add the statement to the ontology.</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_objectprop_to_ind</span><span class="p">(</span><span class="s1">&#39;hasDoor&#39;</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">door</span><span class="p">)</span>
+
+			<span class="c1"># Update the lists of locations and doors.</span>
+			<span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">location</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_locations</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">door</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_doors</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_doors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">door</span><span class="p">)</span>
+
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Statement `Door </span><span class="si">{</span><span class="n">stat</span><span class="o">.</span><span class="n">door</span><span class="si">}</span><span class="s1"> is in location </span><span class="si">{</span><span class="n">stat</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s1">`added to the ontology.&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="helper._Battery_cb"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper._Battery_cb">[docs]</a>	<span class="k">def</span> <span class="nf">_Battery_cb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Callback of the topic */state/battery_low*, that triggers when the robot needs to recharge</span>
+<span class="sd">		or when the robot is completely charged. It changes the battery_low flag accordingly with the</span>
+<span class="sd">		message received.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex_battery</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>   <span class="c1"># take the battery mutex</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span>    <span class="c1"># change the flag of battery low with the received message</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex_battery</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>   <span class="c1"># release the battery mutex</span>
+		<span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Battery of the robot low, need recharging&#39;</span>
+		<span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Battery of the robot completely charged&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="helper.build_the_map"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.build_the_map">[docs]</a>	<span class="k">def</span> <span class="nf">build_the_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Function used by the :class:`scripts.state_machine.Buildmap` class; it waits until the </span>
+<span class="sd">		map is completed, than disjoints all individuals in the ontology, asks the reasoner to reason with</span>
+<span class="sd">		the given ontology and queries it for locations that are corridors.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">r</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># run this code with a frequency of 10Hz</span>
+		<span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+		    <span class="bp">self</span><span class="o">.</span><span class="n">mutex_map</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>   <span class="c1"># take the map mutex</span>
+		    <span class="k">try</span><span class="p">:</span>
+		        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_completed</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>   <span class="c1"># if the map is completed</span>
+
+		            <span class="c1"># Disjoint all individuals.</span>
+		            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;DISJOINT&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_locations</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_doors</span><span class="p">)</span>
+		            <span class="n">now</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>   <span class="c1"># current time</span>
+
+		            <span class="c1"># Start the timer in all locations, when it expires, the location is called URGENT by the reasoner.</span>
+		            <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_locations</span><span class="p">:</span>
+		            	<span class="bp">self</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">add_dataprop_to_ind</span><span class="p">(</span> <span class="s1">&#39;visitedAt&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="s1">&#39;Long&#39;</span><span class="p">,</span> <span class="n">now</span> <span class="p">)</span>
+
+		            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">()</span>   <span class="c1"># call the reasoner</span>
+
+		            <span class="c1"># Query the ontology for all corridors.</span>
+		            <span class="bp">self</span><span class="o">.</span><span class="n">_corridors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">ind_b2_class</span><span class="p">(</span><span class="s1">&#39;CORRIDOR&#39;</span><span class="p">)</span>
+		            <span class="bp">self</span><span class="o">.</span><span class="n">_corridors</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_corridors</span><span class="p">,</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">)</span>
+
+		            <span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Map initialized, the corridors are: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_corridors</span><span class="si">}</span><span class="s1">&#39;</span>
+		            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+		            <span class="k">return</span>
+		    <span class="k">finally</span><span class="p">:</span>
+		        <span class="bp">self</span><span class="o">.</span><span class="n">mutex_map</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>   <span class="c1"># release the map mutex</span>
+
+		    <span class="n">r</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>   <span class="c1"># sleep until the next cycle</span></div>
+
+<div class="viewcode-block" id="helper.query_the_ontology"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.query_the_ontology">[docs]</a>	<span class="k">def</span> <span class="nf">query_the_ontology</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Function used by the :class:`scripts.state_machine.Query` class; it asks the ontology about the</span>
+<span class="sd">		locations that the robot can reach and chooses one of them according to the battery level of the robot </span>
+<span class="sd">		and on the surveillance policy.</span>
+
+<span class="sd">		Returns:</span>
+<span class="sd">			&#39;battery_low&#39; (str): string to have a battery_low transition</span>
+<span class="sd">			&#39;reach_location&#39; (str): string to have a reach_location transition</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">()</span>   <span class="c1"># ask the reasoner to reason about the ontology</span>
+
+		<span class="c1"># Query the ontology about the locations that the robot can reach.</span>
+		<span class="n">can_reach</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">objectprop_b2_ind</span><span class="p">(</span><span class="s1">&#39;canReach&#39;</span><span class="p">,</span><span class="s1">&#39;Robot1&#39;</span><span class="p">)</span>
+		<span class="n">can_reach</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="n">can_reach</span><span class="p">,</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">)</span>
+
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The robot is in location </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_loc</span><span class="si">}</span><span class="s1"> and can reach </span><span class="si">{</span><span class="n">can_reach</span><span class="si">}</span><span class="s1">.&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex_battery</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>   <span class="c1"># take the battery mutex</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="c1"># If the robot has low battery, and it can reach the recharging location.</span>
+		    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">anm</span><span class="o">.</span><span class="n">RECHARGING_LOCATION</span> <span class="ow">in</span> <span class="n">can_reach</span><span class="p">:</span>
+		        <span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">RECHARGING_LOCATION</span>   <span class="c1"># the goal location is the recharging one</span>
+		        <span class="k">return</span> <span class="s1">&#39;battery_low&#39;</span>
+		<span class="k">finally</span><span class="p">:</span>
+		    <span class="bp">self</span><span class="o">.</span><span class="n">mutex_battery</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>   <span class="c1"># release the battery mutex</span>
+
+		<span class="c1"># Call the surveillance policy for computing the next location.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surveillance_policy</span><span class="p">(</span><span class="n">can_reach</span><span class="p">)</span>
+		<span class="k">return</span> <span class="s1">&#39;reach_location&#39;</span></div>
+
+<div class="viewcode-block" id="helper.recharge"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.recharge">[docs]</a>	<span class="k">def</span> <span class="nf">recharge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Function used by the :class:`scripts.state_machine.WaitFull` class; it makes a request to the </span>
+<span class="sd">		service that recharges the battery. This service is blocking, and returns only when the battery is fully charged.</span>
+<span class="sd">		Then, it puts down the battery_low flag.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">req</span> <span class="o">=</span> <span class="n">SetBoolRequest</span><span class="p">()</span>             <span class="c1"># initialize the service request</span>
+		<span class="n">req</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">True</span>                    <span class="c1"># initialize the data field of the request</span>
+		<span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client_recharge</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>   <span class="c1"># send the request to the service</span>
+		
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex_battery</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>       <span class="c1"># take the battery mutex</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">=</span> <span class="kc">False</span>           <span class="c1"># set the battery_low flag to false</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex_battery</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>       <span class="c1"># release the battery mutex</span></div>
+
+<div class="viewcode-block" id="helper.plan_path"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.plan_path">[docs]</a>	<span class="k">def</span> <span class="nf">plan_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Function used by the :class:`scripts.state_machine.Planner` class; it makes a request to the action</span>
+<span class="sd">		service that plan the viapoints between the actual and the goal positions. The goal position is choosen</span>
+<span class="sd">		randomically. It waits until the path is planned, then exits.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">next_point</span> <span class="o">=</span> <span class="n">Point</span><span class="p">()</span>                             <span class="c1"># initialize the goal point</span>
+		<span class="n">next_point</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">anm</span><span class="o">.</span><span class="n">DIMENSION</span><span class="p">)</span>   <span class="c1"># compute a random x position</span>
+		<span class="n">next_point</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">anm</span><span class="o">.</span><span class="n">DIMENSION</span><span class="p">)</span>   <span class="c1"># compute a random y position</span>
+
+		<span class="n">request</span> <span class="o">=</span> <span class="n">PlanActionGoal</span><span class="p">()</span>                       <span class="c1"># initialize the action service request</span>
+		<span class="n">request</span><span class="o">.</span><span class="n">goal</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">next_point</span>                 <span class="c1"># fill the goal point of the action service request</span>
+		<span class="n">request</span><span class="o">.</span><span class="n">goal</span><span class="o">.</span><span class="n">actual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actual_point</span>          <span class="c1"># fill the actual point of the action service request</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_planner</span><span class="o">.</span><span class="n">send_goal</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">goal</span><span class="p">)</span>      <span class="c1"># send the request to the action server</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_planner</span><span class="o">.</span><span class="n">wait_for_result</span><span class="p">()</span>            <span class="c1"># wait for the result of the action service</span>
+
+		<span class="c1"># Store the planned viapoints in a class variable, it will be used by the controller.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">waypoints</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client_planner</span><span class="o">.</span><span class="n">get_result</span><span class="p">())</span><span class="o">.</span><span class="n">via_points</span></div>
+
+<div class="viewcode-block" id="helper.control_robot"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.control_robot">[docs]</a>	<span class="k">def</span> <span class="nf">control_robot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Function used by the :class:`scripts.state_machine.Controller` class; it makes a request to the action</span>
+<span class="sd">		service that controls the robot through viapoints. It waits until the goal point has been reached, updates</span>
+<span class="sd">		the ontology and then exits.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">request</span> <span class="o">=</span> <span class="n">ControlActionGoal</span><span class="p">()</span>                    <span class="c1"># initialize the action service request</span>
+		<span class="n">request</span><span class="o">.</span><span class="n">goal</span><span class="o">.</span><span class="n">via_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waypoints</span>         <span class="c1"># fill the action service request with the stored viapoints</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_controller</span><span class="o">.</span><span class="n">send_goal</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">goal</span><span class="p">)</span>   <span class="c1"># send the request to the action service</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">client_controller</span><span class="o">.</span><span class="n">wait_for_result</span><span class="p">()</span>         <span class="c1"># wait until the action service finished</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">actual_point</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client_controller</span><span class="o">.</span><span class="n">get_result</span><span class="p">())</span><span class="o">.</span><span class="n">reached_point</span>   <span class="c1"># update the actual position of the robot</span>
+
+		<span class="c1"># Update the ontology.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">replace_objectprop_b2_ind</span><span class="p">(</span><span class="s1">&#39;isIn&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_loc</span><span class="p">)</span>   <span class="c1"># update the robot&#39;s location in the ontology		</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">prev_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span>                                <span class="c1"># update the current robot location</span>
+		<span class="n">now</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>                                  <span class="c1"># current time</span>
+		<span class="n">before_robot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">dataprop_b2_ind</span><span class="p">(</span><span class="s1">&#39;now&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">)</span>   <span class="c1"># query the ontology for the last time that the robot moves</span>
+		<span class="n">before_robot</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="n">before_robot</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>                <span class="c1"># format the time</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">replace_dataprop_b2_ind</span><span class="p">(</span><span class="s1">&#39;now&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">,</span> <span class="s1">&#39;Long&#39;</span><span class="p">,</span> <span class="n">now</span><span class="p">,</span> <span class="n">before_robot</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>   <span class="c1"># update the robot time</span>
+		<span class="n">before_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">dataprop_b2_ind</span><span class="p">(</span><span class="s1">&#39;visitedAt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span><span class="p">)</span>   <span class="c1"># update the location time when the robot visits it</span>
+		<span class="n">before_loc</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="n">before_loc</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>                    <span class="c1"># format the time</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">manipulation</span><span class="o">.</span><span class="n">replace_dataprop_b2_ind</span><span class="p">(</span><span class="s1">&#39;visitedAt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span><span class="p">,</span> <span class="s1">&#39;Long&#39;</span><span class="p">,</span> <span class="n">now</span><span class="p">,</span> <span class="n">before_loc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>   <span class="c1"># update the time when the robot has visited the goal location</span>
+
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The robot has reached location </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span><span class="si">}</span><span class="s1"> at time </span><span class="si">{</span><span class="n">now</span><span class="si">}</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="helper.reason"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.reason">[docs]</a>	<span class="k">def</span> <span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Function to make the reasoner reason concerning the ontology.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">apply_buffered_changes</span><span class="p">()</span>   <span class="c1"># apply the changes in the ontology</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sync_buffered_reasoner</span><span class="p">()</span>   <span class="c1"># reason upon the ontology</span></div>
+
+<div class="viewcode-block" id="helper.surveillance_policy"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.surveillance_policy">[docs]</a>	<span class="k">def</span> <span class="nf">surveillance_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reachable_loc</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Function to choose the next location among the reachable ones.</span>
+<span class="sd">		It performs the following surveillance policy:</span>
+<span class="sd">		- It mainly stays on corridors</span>
+<span class="sd">		- If a reachable location is URGENT, it should visit it.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			reachable_loc (str[]): list of reachable locations</span>
+
+<span class="sd">		Returns:</span>
+<span class="sd">			loc (str): choosen location among the reachable ones</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">reachable_loc</span><span class="p">)</span>                    <span class="c1"># shuffle the reachable location, not to have a preference between them.</span>
+		<span class="n">urgent_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">ind_b2_class</span><span class="p">(</span><span class="s1">&#39;URGENT&#39;</span><span class="p">)</span>   <span class="c1"># query for all URGENT locations</span>
+		<span class="n">urgent_loc</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="n">urgent_loc</span><span class="p">,</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">)</span>        <span class="c1"># format the URGENT locations</span>
+
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The urgent locations are </span><span class="si">{</span><span class="n">urgent_loc</span><span class="si">}</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+		<span class="c1"># If there is a reachabe location which is URGENT, return that location.</span>
+		<span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">reachable_loc</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">urgent_loc</span><span class="p">:</span>
+				<span class="k">return</span> <span class="n">loc</span>
+
+		<span class="c1"># If there is a reachable location which is a CORRIDOR, return that location.</span>
+		<span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">reachable_loc</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corridors</span><span class="p">:</span>
+				<span class="k">return</span> <span class="n">loc</span>
+
+		<span class="c1"># Return a randomic location (because of shuffling them).</span>
+		<span class="k">return</span> <span class="n">reachable_loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Ettore Sani.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

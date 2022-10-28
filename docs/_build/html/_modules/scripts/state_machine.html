@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts.state_machine &mdash; surveillance_robot 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> surveillance_robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">utilities</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">surveillance_robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>scripts.state_machine</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scripts.state_machine</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: state_machine </span>
+<span class="sd">  :platform: Unix </span>
+<span class="sd">  :synopsis: Python module for the state machine implementation</span>
+<span class="sd">.. moduleauthor:: Ettore Sani 5322242@studenti.unige.it</span>
+
+<span class="sd">This module implements the state_machine node of the architecture, managing the transition between states.</span>
+<span class="sd">All subscriptions and service requests are managed by the class helper of the module :mod:`state_machine_helper`, as well as the ontology and the surveillance policy.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1">### IMPORTS ###</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">smach</span>
+<span class="kn">import</span> <span class="nn">smach_ros</span>
+
+<span class="kn">from</span> <span class="nn">surveillance_robot</span> <span class="kn">import</span> <span class="n">architecture_name_mapper</span> <span class="k">as</span> <span class="n">anm</span>
+<span class="kn">from</span> <span class="nn">surveillance_robot</span> <span class="kn">import</span> <span class="n">state_machine_helper</span> <span class="k">as</span> <span class="n">smh</span>
+
+<span class="c1">### GLOBAL ###</span>
+<span class="n">LOG_TAG</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">NODE_STATE_MACHINE</span>   <span class="c1"># Tag for identifying logs producer.</span>
+
+<span class="c1">### CLASSES ###</span>
+<div class="viewcode-block" id="Buildmap"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.Buildmap">[docs]</a><span class="k">class</span> <span class="nc">Buildmap</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class defines the state Buildmap of the state machine.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">helper</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;complete_map&#39;</span><span class="p">,</span><span class="s1">&#39;reach_location&#39;</span><span class="p">,</span><span class="s1">&#39;just_visited&#39;</span><span class="p">,</span><span class="s1">&#39;battery_high&#39;</span><span class="p">,</span><span class="s1">&#39;battery_low&#39;</span><span class="p">],</span>
+            <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hlp&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span> <span class="o">=</span> <span class="n">helper</span>
+        
+<div class="viewcode-block" id="Buildmap.execute"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.Buildmap.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when executing the state Buildmap.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                string (str): transition to the next state.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span><span class="o">.</span><span class="n">build_the_map</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s1">&#39;complete_map&#39;</span></div></div>
+
+<div class="viewcode-block" id="Query"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.Query">[docs]</a><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class defines the state Query of the state machine.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">helper</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;complete_map&#39;</span><span class="p">,</span><span class="s1">&#39;reach_location&#39;</span><span class="p">,</span><span class="s1">&#39;just_visited&#39;</span><span class="p">,</span><span class="s1">&#39;battery_high&#39;</span><span class="p">,</span><span class="s1">&#39;battery_low&#39;</span><span class="p">],</span>
+            <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hlp&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span> <span class="o">=</span> <span class="n">helper</span>
+
+<div class="viewcode-block" id="Query.execute"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.Query.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when executing the state Query.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                string (str): transition to the next state.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span><span class="o">.</span><span class="n">query_the_ontology</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">ans</span></div></div>
+
+<div class="viewcode-block" id="Planner"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.Planner">[docs]</a><span class="k">class</span> <span class="nc">Planner</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class defines the state Planner of the state machine.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">helper</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;control&#39;</span><span class="p">,</span><span class="s1">&#39;arrived&#39;</span><span class="p">],</span>
+            <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hlp&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span> <span class="o">=</span> <span class="n">helper</span>
+
+<div class="viewcode-block" id="Planner.execute"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.Planner.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when executing the state Planner.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                string (str): transition to the next state.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span><span class="o">.</span><span class="n">plan_path</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s1">&#39;control&#39;</span></div></div>
+
+<div class="viewcode-block" id="Controller"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.Controller">[docs]</a><span class="k">class</span> <span class="nc">Controller</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class defines the state Controller of the state machine.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">helper</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;control&#39;</span><span class="p">,</span><span class="s1">&#39;arrived&#39;</span><span class="p">],</span>
+            <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hlp&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span> <span class="o">=</span> <span class="n">helper</span>
+
+<div class="viewcode-block" id="Controller.execute"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.Controller.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when executing the state Controller.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                string (str): transition to the next state.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span><span class="o">.</span><span class="n">control_robot</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s1">&#39;arrived&#39;</span></div></div>
+
+<div class="viewcode-block" id="WaitFull"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.WaitFull">[docs]</a><span class="k">class</span> <span class="nc">WaitFull</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class defines the state WaitFull of the state machine.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">helper</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+            <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;just_visited&#39;</span><span class="p">,</span><span class="s1">&#39;charged&#39;</span><span class="p">],</span>
+            <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hlp&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span> <span class="o">=</span> <span class="n">helper</span>
+
+<div class="viewcode-block" id="WaitFull.execute"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.WaitFull.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when executing the state WaitFull.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                string (str): transition to the next state.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hlp</span><span class="o">.</span><span class="n">recharge</span><span class="p">()</span>
+        <span class="k">return</span> <span class="s1">&#39;charged&#39;</span></div></div>
+
+<span class="c1">### MAIN ###</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../scripts.html#scripts.state_machine.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;This function initializes the ROS node state_machine.</span>
+<span class="sd">    It creates a SMACH state machine and two nested sub-state machines, </span>
+<span class="sd">    by relying on the `smach &lt;http://wiki.ros.org/smach/&gt;`_ module.</span>
+<span class="sd">    An instance of the :class:`surveillance_robot.state_machine_helper.helper` class is passed to every state.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get parameter and initialise this node.</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">NODE_STATE_MACHINE</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">rospy</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+    <span class="c1"># Log information.</span>
+    <span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Initialise node `</span><span class="si">{</span><span class="n">anm</span><span class="o">.</span><span class="n">NODE_STATE_MACHINE</span><span class="si">}</span><span class="s1">`.&#39;</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+    <span class="c1"># Create a SMACH state machine.</span>
+    <span class="n">sm</span> <span class="o">=</span> <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="p">(</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;container_interface&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Create an instance of the class helper.</span>
+    <span class="n">hlp</span> <span class="o">=</span> <span class="n">smh</span><span class="o">.</span><span class="n">helper</span><span class="p">()</span>
+
+    <span class="c1"># Open the state machine and fill it with the states.</span>
+    <span class="k">with</span> <span class="n">sm</span><span class="p">:</span>
+
+        <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;BUILDMAP&#39;</span><span class="p">,</span> <span class="n">Buildmap</span><span class="p">(</span><span class="n">hlp</span><span class="p">),</span> 
+                               <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;complete_map&#39;</span>  <span class="p">:</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span> 
+                                            <span class="s1">&#39;reach_location&#39;</span><span class="p">:</span><span class="s1">&#39;BUILDMAP&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;just_visited&#39;</span>  <span class="p">:</span><span class="s1">&#39;BUILDMAP&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_high&#39;</span>  <span class="p">:</span><span class="s1">&#39;BUILDMAP&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_low&#39;</span>   <span class="p">:</span><span class="s1">&#39;BUILDMAP&#39;</span><span class="p">,</span>
+                                            <span class="p">})</span>
+
+        <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span> <span class="n">Query</span><span class="p">(</span><span class="n">hlp</span><span class="p">),</span> 
+                               <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;complete_map&#39;</span>  <span class="p">:</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span> 
+                                            <span class="s1">&#39;reach_location&#39;</span><span class="p">:</span><span class="s1">&#39;MOVE&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;just_visited&#39;</span>  <span class="p">:</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_high&#39;</span>  <span class="p">:</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_low&#39;</span>   <span class="p">:</span><span class="s1">&#39;RECHARGE&#39;</span><span class="p">,</span>
+                                            <span class="p">})</span>
+
+        <span class="c1"># Create a sub state machine</span>
+        <span class="n">move_subsm</span> <span class="o">=</span> <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="p">(</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;complete_map&#39;</span><span class="p">,</span><span class="s1">&#39;reach_location&#39;</span><span class="p">,</span><span class="s1">&#39;just_visited&#39;</span><span class="p">,</span><span class="s1">&#39;battery_high&#39;</span><span class="p">,</span><span class="s1">&#39;battery_low&#39;</span><span class="p">,</span><span class="s1">&#39;charged&#39;</span><span class="p">])</span>
+        
+        <span class="c1"># Open the sub state machine and fill it with the states.</span>
+        <span class="k">with</span> <span class="n">move_subsm</span><span class="p">:</span>
+
+            <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;PLANNER&#39;</span><span class="p">,</span> <span class="n">Planner</span><span class="p">(</span><span class="n">hlp</span><span class="p">),</span> 
+                                   <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;control&#39;</span><span class="p">:</span><span class="s1">&#39;CONTROLLER&#39;</span><span class="p">,</span>
+                                                <span class="s1">&#39;arrived&#39;</span><span class="p">:</span><span class="s1">&#39;PLANNER&#39;</span><span class="p">,</span>
+                                                <span class="p">})</span>
+
+            <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;CONTROLLER&#39;</span><span class="p">,</span> <span class="n">Controller</span><span class="p">(</span><span class="n">hlp</span><span class="p">),</span> 
+                                   <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;control&#39;</span><span class="p">:</span><span class="s1">&#39;CONTROLLER&#39;</span><span class="p">,</span>
+                                                <span class="s1">&#39;arrived&#39;</span><span class="p">:</span><span class="s1">&#39;just_visited&#39;</span><span class="p">,</span>
+                                                <span class="p">})</span>
+
+        <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;MOVE&#39;</span><span class="p">,</span> <span class="n">move_subsm</span><span class="p">,</span>
+                               <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;complete_map&#39;</span>  <span class="p">:</span><span class="s1">&#39;MOVE&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;reach_location&#39;</span><span class="p">:</span><span class="s1">&#39;MOVE&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;just_visited&#39;</span>  <span class="p">:</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_high&#39;</span>  <span class="p">:</span><span class="s1">&#39;MOVE&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_low&#39;</span>   <span class="p">:</span><span class="s1">&#39;RECHARGE&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;charged&#39;</span>       <span class="p">:</span><span class="s1">&#39;MOVE&#39;</span><span class="p">,</span>
+                                            <span class="p">})</span>
+
+        <span class="c1"># Create a sub state machine</span>
+        <span class="n">recharge_subsm</span> <span class="o">=</span> <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="p">(</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;complete_map&#39;</span><span class="p">,</span><span class="s1">&#39;reach_location&#39;</span><span class="p">,</span><span class="s1">&#39;just_visited&#39;</span><span class="p">,</span><span class="s1">&#39;battery_high&#39;</span><span class="p">,</span><span class="s1">&#39;battery_low&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Open the sub state machine and fill it with the states.</span>
+        <span class="k">with</span> <span class="n">recharge_subsm</span><span class="p">:</span>
+
+            <span class="c1"># Here, the state MOVE is a sub sub state machine.</span>
+            <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;MOVE&#39;</span><span class="p">,</span> <span class="n">move_subsm</span><span class="p">,</span> 
+                                   <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;just_visited&#39;</span><span class="p">:</span><span class="s1">&#39;WAITFULL&#39;</span><span class="p">,</span>
+                                                <span class="s1">&#39;charged&#39;</span>     <span class="p">:</span><span class="s1">&#39;MOVE&#39;</span>
+                                                <span class="p">})</span>
+
+            <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;WAITFULL&#39;</span><span class="p">,</span> <span class="n">WaitFull</span><span class="p">(</span><span class="n">hlp</span><span class="p">),</span> 
+                                   <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;just_visited&#39;</span><span class="p">:</span><span class="s1">&#39;WAITFULL&#39;</span><span class="p">,</span>
+                                                <span class="s1">&#39;charged&#39;</span>     <span class="p">:</span><span class="s1">&#39;battery_high&#39;</span><span class="p">,</span>
+                                                <span class="p">})</span>
+
+        <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;RECHARGE&#39;</span><span class="p">,</span> <span class="n">recharge_subsm</span><span class="p">,</span>
+                               <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;complete_map&#39;</span>  <span class="p">:</span><span class="s1">&#39;RECHARGE&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;reach_location&#39;</span><span class="p">:</span><span class="s1">&#39;RECHARGE&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;just_visited&#39;</span>  <span class="p">:</span><span class="s1">&#39;RECHARGE&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_high&#39;</span>  <span class="p">:</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_low&#39;</span>   <span class="p">:</span><span class="s1">&#39;RECHARGE&#39;</span><span class="p">,</span>
+                                            <span class="p">})</span>
+
+    <span class="c1"># Create and start the introspection server for visualization.</span>
+    <span class="n">sis</span> <span class="o">=</span> <span class="n">smach_ros</span><span class="o">.</span><span class="n">IntrospectionServer</span><span class="p">(</span><span class="s1">&#39;server_name&#39;</span><span class="p">,</span> <span class="n">sm</span><span class="p">,</span> <span class="s1">&#39;/SM_ROOT&#39;</span><span class="p">)</span>
+    <span class="n">sis</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="c1"># Execute the state machine.</span>
+    <span class="n">outcome</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+    <span class="c1"># Wait for ctrl-c to stop the application.</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">spin</span><span class="p">()</span>
+    <span class="n">sis</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Ettore Sani.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

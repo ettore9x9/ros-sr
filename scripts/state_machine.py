@@ -1,5 +1,16 @@
 #!/usr/bin/env python
+"""
+.. module:: state_machine 
+  :platform: Unix 
+  :synopsis: Python module for the state machine implementation
+.. moduleauthor:: Ettore Sani 5322242@studenti.unige.it
 
+This module implements the state_machine node of the architecture, managing the transition between states.
+All subscriptions and service requests are managed by the class helper of the module :mod:`state_machine_helper`, as well as the ontology and the surveillance policy.
+
+"""
+
+### IMPORTS ###
 import rospy
 import smach
 import smach_ros
@@ -7,57 +18,123 @@ import smach_ros
 from surveillance_robot import architecture_name_mapper as anm
 from surveillance_robot import state_machine_helper as smh
 
-# A tag for identifying logs producer.
-LOG_TAG = anm.NODE_STATE_MACHINE
+### GLOBAL ###
+LOG_TAG = anm.NODE_STATE_MACHINE   # Tag for identifying logs producer.
 
-helper = smh.helper()
-
-# define state Buildmap
+### CLASSES ###
 class Buildmap(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['complete_map','reach_location','just_visited','battery_high','battery_low'])
+    """This class defines the state Buildmap of the state machine.
+
+    """
+    def __init__(self, helper):
+        smach.State.__init__(self, 
+            outcomes=['complete_map','reach_location','just_visited','battery_high','battery_low'],
+            input_keys=['hlp']
+            )
+        self.hlp = helper
         
     def execute(self, userdata):
-        helper.build_the_map()
+        """Called when executing the state Buildmap.
+
+            Returns:
+                string (str): transition to the next state.
+
+        """
+        self.hlp.build_the_map()
         return 'complete_map'
 
-# define state Query
 class Query(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['complete_map','reach_location','just_visited','battery_high','battery_low'])
+    """This class defines the state Query of the state machine.
+
+    """
+    def __init__(self, helper):
+        smach.State.__init__(self, 
+            outcomes=['complete_map','reach_location','just_visited','battery_high','battery_low'],
+            input_keys=['hlp']
+            )
+        self.hlp = helper
 
     def execute(self, userdata):
-        ans = helper.query_the_ontology()
+        """Called when executing the state Query.
+
+            Returns:
+                string (str): transition to the next state.
+
+        """
+        ans = self.hlp.query_the_ontology()
         return ans
 
-# define state Planner
 class Planner(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['control','arrived'])
+    """This class defines the state Planner of the state machine.
+
+    """
+    def __init__(self, helper):
+        smach.State.__init__(self, 
+            outcomes=['control','arrived'],
+            input_keys=['hlp']
+            )
+        self.hlp = helper
 
     def execute(self, userdata):
-        helper.plan_path()
+        """Called when executing the state Planner.
+
+            Returns:
+                string (str): transition to the next state.
+
+        """
+        self.hlp.plan_path()
         return 'control'
 
-# define state Controller
 class Controller(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['control','arrived'])
+    """This class defines the state Controller of the state machine.
+
+    """
+    def __init__(self, helper):
+        smach.State.__init__(self, 
+            outcomes=['control','arrived'],
+            input_keys=['hlp']
+            )
+        self.hlp = helper
 
     def execute(self, userdata):
-        helper.control_robot()
+        """Called when executing the state Controller.
+
+            Returns:
+                string (str): transition to the next state.
+
+        """
+        self.hlp.control_robot()
         return 'arrived'
 
-# define state WaitFull
 class WaitFull(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['just_visited','charged'])
+    """This class defines the state WaitFull of the state machine.
+
+    """
+    def __init__(self, helper):
+        smach.State.__init__(self, 
+            outcomes=['just_visited','charged'],
+            input_keys=['hlp']
+            )
+        self.hlp = helper
 
     def execute(self, userdata):
-        helper.recharge()
+        """Called when executing the state WaitFull.
+
+            Returns:
+                string (str): transition to the next state.
+
+        """
+        self.hlp.recharge()
         return 'charged'
 
+### MAIN ###
 def main():
+    """This function initializes the ROS node state_machine.
+    It creates a SMACH state machine and two nested sub-state machines, 
+    by relying on the `smach <http://wiki.ros.org/smach/>`_ module.
+    An instance of the :class:`surveillance_robot.state_machine_helper.helper` class is passed to every state.
+
+    """
     # Get parameter and initialise this node.
     rospy.init_node(anm.NODE_STATE_MACHINE, log_level=rospy.INFO)
 
@@ -65,13 +142,16 @@ def main():
     log_msg = f'Initialise node `{anm.NODE_STATE_MACHINE}`.'
     rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
-    # Create a SMACH state machine
+    # Create a SMACH state machine.
     sm = smach.StateMachine(outcomes=['container_interface'])
 
-    # Open the container
+    # Create an instance of the class helper.
+    hlp = smh.helper()
+
+    # Open the state machine and fill it with the states.
     with sm:
-        # Add states to the container
-        smach.StateMachine.add('BUILDMAP', Buildmap(), 
+
+        smach.StateMachine.add('BUILDMAP', Buildmap(hlp), 
                                transitions={'complete_map'  :'QUERY', 
                                             'reach_location':'BUILDMAP',
                                             'just_visited'  :'BUILDMAP',
@@ -79,7 +159,7 @@ def main():
                                             'battery_low'   :'BUILDMAP',
                                             })
 
-        smach.StateMachine.add('QUERY', Query(), 
+        smach.StateMachine.add('QUERY', Query(hlp), 
                                transitions={'complete_map'  :'QUERY', 
                                             'reach_location':'MOVE',
                                             'just_visited'  :'QUERY',
@@ -87,16 +167,18 @@ def main():
                                             'battery_low'   :'RECHARGE',
                                             })
 
+        # Create a sub state machine
         move_subsm = smach.StateMachine(outcomes=['complete_map','reach_location','just_visited','battery_high','battery_low','charged'])
         
+        # Open the sub state machine and fill it with the states.
         with move_subsm:
 
-            smach.StateMachine.add('PLANNER', Planner(), 
+            smach.StateMachine.add('PLANNER', Planner(hlp), 
                                    transitions={'control':'CONTROLLER',
                                                 'arrived':'PLANNER',
                                                 })
 
-            smach.StateMachine.add('CONTROLLER', Controller(), 
+            smach.StateMachine.add('CONTROLLER', Controller(hlp), 
                                    transitions={'control':'CONTROLLER',
                                                 'arrived':'just_visited',
                                                 })
@@ -110,16 +192,19 @@ def main():
                                             'charged'       :'MOVE',
                                             })
 
+        # Create a sub state machine
         recharge_subsm = smach.StateMachine(outcomes=['complete_map','reach_location','just_visited','battery_high','battery_low'])
 
+        # Open the sub state machine and fill it with the states.
         with recharge_subsm:
 
+            # Here, the state MOVE is a sub sub state machine.
             smach.StateMachine.add('MOVE', move_subsm, 
                                    transitions={'just_visited':'WAITFULL',
                                                 'charged'     :'MOVE'
                                                 })
 
-            smach.StateMachine.add('WAITFULL', WaitFull(), 
+            smach.StateMachine.add('WAITFULL', WaitFull(hlp), 
                                    transitions={'just_visited':'WAITFULL',
                                                 'charged'     :'battery_high',
                                                 })
@@ -132,14 +217,14 @@ def main():
                                             'battery_low'   :'RECHARGE',
                                             })
 
-    # Create and start the introspection server for visualization
+    # Create and start the introspection server for visualization.
     sis = smach_ros.IntrospectionServer('server_name', sm, '/SM_ROOT')
     sis.start()
 
-    # Execute the state machine
+    # Execute the state machine.
     outcome = sm.execute()
 
-    # Wait for ctrl-c to stop the application
+    # Wait for ctrl-c to stop the application.
     rospy.spin()
     sis.stop()
 

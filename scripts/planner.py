@@ -1,5 +1,18 @@
 #! /usr/bin/env python
+"""
+.. module:: planner
+  :platform: Unix 
+  :synopsis: Python module for the node that plans the robot's trajectory
+.. moduleauthor:: Ettore Sani 5322242@studenti.unige.it
 
+This module simulates the planner node of the architecture. It implements a service that, provided the initial position, plans a variable number of waypoints to reach the goal position.
+
+Service:
+    /motion/planner
+
+"""
+
+### IMPORTS ###
 import random
 import rospy
 # Import constant name defined to structure the architecture.
@@ -9,14 +22,15 @@ from actionlib import SimpleActionServer
 # Import custom message, actions and services.
 from surveillance_robot.msg import Point, PlanFeedback, PlanResult, PlanAction
 
-# A tag for identifying logs producer.
-LOG_TAG = anm.NODE_PLANNER
+### GLOBAL ###
+LOG_TAG = anm.NODE_PLANNER   # Tag for identifying logs producer.
 
-# An action server to simulate motion planning.
-# Given a target position, it retrieve the current robot position from the 
-# `robot-state` node, and return a plan as a set of via points.
+### CLASSES ###
 class PlanningAction(object):
+    """This class implements an action server to simulate motion planning.
+    Given an initial and a target position, it returns a plan as a set of via points.
 
+    """
     def __init__(self):
         # Get random-based parameters used by this server
         self._random_plan_points = rospy.get_param(anm.PARAM_PLANNER_POINTS, [2, 8])
@@ -28,20 +42,22 @@ class PlanningAction(object):
                                       execute_cb=self.execute_callback, 
                                       auto_start=False)
         self._as.start()
-        # Log information.
+
         log_msg = (f'`{anm.ACTION_PLANNER}` Action Server initialised. It will create random path with a number of point '
                    f'spanning in [{self._random_plan_points[0]}, {self._random_plan_points[1]}). Each point will be generated '
                    f'with a delay spanning in [{self._random_plan_time[0]}, {self._random_plan_time[1]}).')
       
-    # The callback invoked when a client set a goal to the `planner` server.
-    # This function will return a list of random points (i.e., the plan) when the fist point
-    # is the current robot position (retrieved from the `robot-state` node), while the last 
-    # point is the `goal` position (given as input parameter). The plan will contain 
-    # a random number of other points, which spans in the range 
-    # [`self._random_plan_points[0]`, `self._random_plan_points[1]`). To simulate computation,
-    # each point is added to the plan with a random delay spanning in the range 
-    # [`self._random_plan_time[0]`, `self._random_plan_time[1]`).
     def execute_callback(self, goal):
+        """Callback function invoked when a client set a goal to the `planner` server.
+        This function will return a list of random points (i.e., the plan) when the fist point
+        is the current robot position, while the last point is the `goal` position. The plan will contain 
+        a random number of other points, which spans in the range 
+        [`self._random_plan_points[0]`, `self._random_plan_points[1]`). To simulate computation,
+        each point is added to the plan with a random delay spanning in the range 
+        [`self._random_plan_time[0]`, `self._random_plan_time[1]`).
+
+        """
+        # Extract the starting and the goal point from the received message.
         start_point = goal.actual
         target_point = goal.target
 
@@ -77,8 +93,8 @@ class PlanningAction(object):
                 return
             # Generate a new random point of the plan.
             new_point = Point()
-            new_point.x = random.uniform(0, 10)
-            new_point.y = random.uniform(0, 10)
+            new_point.x = random.uniform(0, anm.DIMENSION)
+            new_point.y = random.uniform(0, anm.DIMENSION)
             feedback.via_points.append(new_point)
             if i < number_of_points - 1:
                 # Publish the new random point as feedback to the client.
@@ -98,8 +114,14 @@ class PlanningAction(object):
         log_msg += ''.join('(' + str(point.x) + ', ' + str(point.y) + '), ' for point in result.via_points)
         rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
-if __name__ == '__main__':
-    # Initialise the node, its action server, and wait.    
+def main():
+    """This function initializes the planner ros node.
+
+    """
     rospy.init_node(anm.NODE_PLANNER, log_level=rospy.INFO)
     server = PlanningAction()
     rospy.spin()
+
+### MAIN ###
+if __name__ == '__main__':
+    main()   

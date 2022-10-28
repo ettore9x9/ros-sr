@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts.battery_manager &mdash; surveillance_robot 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> surveillance_robot
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">utilities</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">surveillance_robot</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>scripts.battery_manager</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scripts.battery_manager</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: battery_manager</span>
+<span class="sd">  :platform: Unix </span>
+<span class="sd">  :synopsis: Python module for the battery manager node</span>
+<span class="sd">.. moduleauthor:: Ettore Sani 5322242@studenti.unige.it</span>
+
+<span class="sd">This module implements the battery_manager node of the architecture, publishing a message when the robot has low battery and prividing a service for recharging it when at the base.</span>
+
+<span class="sd">Publishes to:</span>
+<span class="sd">  /state/battery_low</span>
+
+<span class="sd">Service:</span>
+<span class="sd">  /state/recharging</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1">### IMPORTS ###</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+
+<span class="kn">from</span> <span class="nn">surveillance_robot</span> <span class="kn">import</span> <span class="n">architecture_name_mapper</span> <span class="k">as</span> <span class="n">anm</span>
+
+<span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="kn">import</span> <span class="n">Bool</span>
+<span class="kn">from</span> <span class="nn">std_srvs.srv</span> <span class="kn">import</span> <span class="n">SetBool</span><span class="p">,</span> <span class="n">SetBoolResponse</span>
+
+<span class="c1">### GLOBAL ###</span>
+<span class="n">LOG_TAG</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">NODE_BATTERY_MANAGER</span>   <span class="c1"># tag for identifying logs producer</span>
+<span class="n">STEP</span> <span class="o">=</span> <span class="mi">30</span>                            <span class="c1"># number of printing during the recharging operation</span>
+
+<span class="c1">### FUNCTIONS ###</span>
+<div class="viewcode-block" id="loading_bar"><a class="viewcode-back" href="../../scripts.html#scripts.battery_manager.loading_bar">[docs]</a><span class="k">def</span> <span class="nf">loading_bar</span><span class="p">(</span><span class="n">percent</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function to print a loading bar.</span>
+<span class="sd">    Graphical feature that prints a loading bar that rapresents the percentage of the battery recharging.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">       percent (float): Actual state of recharging.</span>
+<span class="sd">       size (float): Size of total recharging.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_chars</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">percent</span> <span class="o">/</span> <span class="p">(</span><span class="n">buf_size</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span> <span class="o">*</span> <span class="n">STEP</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>   <span class="c1"># number of &#39;black&#39; cells of the loading bar</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">[&quot;</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_chars</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">STEP</span> <span class="o">-</span> <span class="n">num_chars</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;] </span><span class="si">%d</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> DONE&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">percent</span> <span class="o">/</span> <span class="p">(</span><span class="n">buf_size</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)),</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span></div>
+
+<span class="c1">### CLASSES ###</span>
+<div class="viewcode-block" id="BatteryManager"><a class="viewcode-back" href="../../scripts.html#scripts.battery_manager.BatteryManager">[docs]</a><span class="k">class</span> <span class="nc">BatteryManager</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This class is the battery manager of the robot. It publishes when the battery of the robot is low,</span>
+<span class="sd">    and provides a service to recharge it.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span> <span class="o">=</span> <span class="kc">False</span>                                           <span class="c1"># initialise the flag of the battery low</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_randomness</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">PARAM_RANDOM_ACTIVE</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>   <span class="c1"># initialise randomness, if enabled</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_randomness</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_random_battery_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">PARAM_BATTERY_TIME</span><span class="p">,</span> <span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">])</span>   <span class="c1"># initialize the range of battery duration in time</span>
+            
+            <span class="n">log_msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Random-based battery low notification active: the battery change state (i.e., low/high) with a &#39;</span>
+                       <span class="sa">f</span><span class="s1">&#39;delay in the range of [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_random_battery_time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_random_battery_time</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">) seconds.&#39;</span><span class="p">)</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+        <span class="c1"># Start the service for recharging.</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Service</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">SERVICE_RECHARGING</span><span class="p">,</span> <span class="n">SetBool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">recharging</span><span class="p">)</span>
+
+        <span class="c1"># Start publisher on a separate thread.</span>
+        <span class="n">th</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_battery_low</span><span class="p">)</span>
+        <span class="n">th</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="n">log_msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Initialise node `</span><span class="si">{</span><span class="n">anm</span><span class="o">.</span><span class="n">NODE_BATTERY_MANAGER</span><span class="si">}</span><span class="s1">` that publishes on topic </span><span class="si">{</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_BATTERY_LOW</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+<div class="viewcode-block" id="BatteryManager.recharging"><a class="viewcode-back" href="../../scripts.html#scripts.battery_manager.BatteryManager.recharging">[docs]</a>    <span class="k">def</span> <span class="nf">recharging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Service callback to recharge the robot. It waits for a specified recharging time updating the loading bar,</span>
+<span class="sd">        then returns the success of the operation.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">SetBoolResponse</span><span class="p">()</span>    <span class="c1"># initialize the service response</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">data</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Recharging...&#39;</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">STEP</span><span class="p">):</span>
+                <span class="n">loading_bar</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">STEP</span><span class="p">)</span>     <span class="c1"># print the loading bar</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">RECHARGING_TIME</span> <span class="o">/</span> <span class="n">STEP</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Robot fully charged.&#39;</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span> <span class="o">=</span> <span class="kc">False</span>   <span class="c1"># put the battery low flag down</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>     <span class="c1"># successful recharging</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="BatteryManager._is_battery_low"><a class="viewcode-back" href="../../scripts.html#scripts.battery_manager.BatteryManager._is_battery_low">[docs]</a>    <span class="k">def</span> <span class="nf">_is_battery_low</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Publisher of the battery level. It runs on a separate thread ad publishes when the robot has low battery.</span>
+<span class="sd">        Depending on the modality, the battery low can be triggered randomically or by an user input.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">publisher</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_BATTERY_LOW</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">latch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>   <span class="c1"># define the publisher</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_randomness</span><span class="p">:</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">_random_battery_notifier</span><span class="p">(</span><span class="n">publisher</span><span class="p">)</span>   <span class="c1"># randomically the battery becames low</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_manual_battery_notifier</span><span class="p">(</span><span class="n">publisher</span><span class="p">)</span>   <span class="c1"># the battery becames low after an user command</span></div>
+
+<div class="viewcode-block" id="BatteryManager._random_battery_notifier"><a class="viewcode-back" href="../../scripts.html#scripts.battery_manager.BatteryManager._random_battery_notifier">[docs]</a>    <span class="k">def</span> <span class="nf">_random_battery_notifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">publisher</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Function to publish when the battery becames low, based on a random delay within the interval </span>
+<span class="sd">        [`self._random_battery_time[0]`, `self._random_battery_time[1]`). The message is published through </span>
+<span class="sd">        the `publisher` input parameter.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            publisher (rospy.Publisher): publisher to the battery low topic</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>                   <span class="c1"># if the robot has full battery</span>
+
+                <span class="c1"># Wait for simulate battery usage.</span>
+                <span class="n">delay</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_random_battery_time</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random_battery_time</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span> <span class="o">=</span> <span class="kc">True</span>                     <span class="c1"># change battery state.</span>
+                <span class="n">publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">Bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span><span class="p">))</span>   <span class="c1"># publish battery level.</span>
+
+                <span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Robot got low battery after </span><span class="si">{</span><span class="n">delay</span><span class="si">}</span><span class="s1"> seconds.&#39;</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="BatteryManager._manual_battery_notifier"><a class="viewcode-back" href="../../scripts.html#scripts.battery_manager.BatteryManager._manual_battery_notifier">[docs]</a>    <span class="k">def</span> <span class="nf">_manual_battery_notifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">publisher</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Function to publish when the battery becames low, based on a user keyboard interaction. </span>
+<span class="sd">        The message is published through the `publisher` input parameter.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            publisher (rospy.Publisher): publisher to the battery low topic</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Explain keyboard-based interaction.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  # Type `Low` (`L`) to notify that the battery is low.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  # Type `cnt+C` and `Enter` to quit.&#39;</span><span class="p">)</span>
+
+        <span class="n">publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">Bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span><span class="p">))</span>   <span class="c1"># publish the default value at startup</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>               <span class="c1"># loop to enable multiple interactions</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>           <span class="c1"># if the robot is fully charged</span>
+                <span class="n">user_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39; &gt; &#39;</span><span class="p">)</span>            <span class="c1"># wait for the user input</span>
+                <span class="n">user_input</span> <span class="o">=</span> <span class="n">user_input</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>      <span class="c1"># lowercase the string</span>
+
+                <span class="c1"># Understand the entered text.</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="n">user_input</span> <span class="o">==</span> <span class="s1">&#39;low&#39;</span> <span class="ow">or</span> <span class="n">user_input</span> <span class="o">==</span> <span class="s1">&#39;l&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="s1">&#39;Robot got low battery.&#39;</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Cannot understand the entered command.</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*** USER INPUT ERROR! Try again:&#39;</span><span class="p">)</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="c1"># Publish the massage based on the entered command.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">error</span><span class="p">:</span>
+                    <span class="n">publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">Bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../scripts.html#scripts.battery_manager.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;This function initializes the battery_manager ros node.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">NODE_BATTERY_MANAGER</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">rospy</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">BatteryManager</span><span class="p">()</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">spin</span><span class="p">()</span></div>
+
+
+<span class="c1">### MAIN ###</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Ettore Sani.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
