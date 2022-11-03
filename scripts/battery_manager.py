@@ -5,7 +5,7 @@
   :synopsis: Python module for the battery manager node
 .. moduleauthor:: Ettore Sani 5322242@studenti.unige.it
 
-This module implements the battery_manager node of the architecture, publishing a message when the robot has low battery and prividing a service for recharging it when at the base.
+This module implements the battery_manager node of the architecture, publishing a message when the robot has low battery and providing a service for recharging it when at the base.
 
 Publishes to:
   /state/battery_low
