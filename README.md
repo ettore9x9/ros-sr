@@ -1,5 +1,3 @@
-12 15 19
-
 # Surveillance robot #
 **A ROS-based simulation of a surveillance robot in a close environment.**  
 Author: *Ettore Sani*
@@ -9,10 +7,10 @@ Author: *Ettore Sani*
 ## Introduction ##
 
 This repository contains ROS-based software that simulates a surveillance robot.
-Here you can find the docuentation for this repository.
+[Here](https://ettore9x9.github.io/surveillance_robot/) you can find the docuentation for this repository.
 It has been developed for the first assignment of the Experimental Laboratory class at the University of Genoa.
 
-In particular, the software developed made use of a Smach state machine, and builds an ontology with ArMOR.
+In particular, the software developed made use of a [Smach](http://wiki.ros.org/smach) state machine, and builds an ontology with [armor](https://github.com/EmaroLab/armor), using the [armor_py_api](https://github.com/EmaroLab/armor_py_api).
 The robot is able to store sentences provided by an external node about the enviroment in the ontology, and to call the reasoner to retreive informations. It is also implemented a surveillance policy for visiting the environment.
 The whole software is provided in Python 3.
 
