@@ -75,6 +75,8 @@ The whole scenario has the following assumptions:
  - The robot generates a trajectory as a list of via points to follow, given its current and target positions. Following this list of via points, the robot can always reach the goal position.
  - The battery can become low at any time.
  - Even if the battery is low, the robot goes to the recharging location only if it is reachable. Otherwise, it continues traveling into the environment.
+ - If the battery goes down while building the map, the robot finish to build it and then recharges.
+ - The starting and the recharging positions can be different.
 
 ## Project Structure
 
@@ -113,6 +115,7 @@ This repository contains a ROS package named `surveillance_robot` that includes 
 ### Dependencies ###
 
 The software dependencies are:
+ - [xterm](https://xtermjs.org/docs/): to open multiple terminals with the launcher.
  - [rospy](http://wiki.ros.org/rospy): to define ROS nodes, services and related messages.
  - [roslaunch](http://wiki.ros.org/roslaunch): to launch multiple nodes.
  - [message_generation](http://wiki.ros.org/message_generation): to generate custom messages.
@@ -129,49 +132,34 @@ in the `scripts/` folder.
 
 ### The `state_machine` Node ###
 
+The `state_machine` is a node that defines the finite state machine of the architecture.
+It manages the transitions between states; for the execution of each state it relies on the class `helper` of the `state_machine_helper` module.
+
+This is a representation of the state machine architecture:
+
+<img src="https://github.com/ettore9x9/surveillance_robot/diagrams/state_machine_diagram.png" width="900">
+
+Where we can immediately recognize the two different phases.
+
+As shown in the diagram, there are a couple of sub-state machine:
+ - The MOVE state is a sub-state machine
+ - The RECHARGE state is a sub-state machine, one of its states is an instance of the above state MOVE, which in this case is in practice a sub-sub-state machine.
 
 ### The `battery_manager` Node ###
 
-<img src="https://github.com/buoncubi/arch_skeleton/blob/main/diagrams/robot-state.png" width="900">
 
-The `robot-state` is a node that encodes the knowledge shared among the other components, and it 
-implements two services (i.e., `state/set_pose` and `state/get_pose`) and a publisher (i.e., 
-`state/battery_low`). 
+The `battery_manager` is a node that deal with the battery of the robot and it 
+implements two tasks:
+ - It publishes when the robot has low battery. Depending on the modality, the battery low can be triggered randomically or by an user input.
+ - It implements a service to recharge the robot. It waits for a specified recharging time, then returns the success of the operation.
 
-The services allow setting and getting the current robot position, which is shared between the 
-`planner` and the `controller` as detailed below. In particular, the `state/set_pose` requires a 
-`Point` to be set and returns nothing, while the `state/get_pose` requires nothing and returns a `Point` encoding the robot pose. 
+For clarity purposes, the `battery_manager` node runs on a dedicated terminal; in case of manual modality, where it waits for an user input, the behavior is the following:
 
-Note that a client should set the initial robot position when the architecture startups. 
+<img src="https://github.com/ettore9x9/surveillance_robot/diagrams/battery_manager_terminal.png" width="900">
 
-Also, note that, for more general architectures, the robot pose might be published in a topic, 
-instead of being provided through a server. This is because many components might require the 
-current robot pose, which might change frequently. However, this example does not consider such a case.
+Where the loading bar represents the robot's recharging.
 
-Moreover, the `robot-state` also implements a publisher of `Boolean` messages into the `state/
-battery_low` topic. This message is published when the batter changes state. We consider two 
-possible states: low battery (i.e., `True` is published) and recharged (i.e., `False` is 
-published).
-
-The battery-related publisher allows publishing messages from the keyboard or in a randomized 
-manner, and this can be chosen with the `test/random_sense/active` parameter detailed below. 
-When random messages are published, the `test/random_sense/battery_time` parameter is used to 
-delay the published messages.
-
-To observe the behavior of the `robot-state` node you can run the following commands.
-```bash
-roscore
-# Open a new terminal.
-rosrun arch_skeleton robot-state.py 
-# Open a new terminal
-rostopic echo /state/battery_low 
-# Open a new terminal 
-rosservice call /state/set_pose "pose: { x: 1.11,  y: 2.22}"
-rosservice call /state/get_pose "{}" 
-```
-With `rosparam` you might also set the `test/random_sense/active` and  
-`test/random_sense/battery_time` parameters (detailed below) to see how messages are 
-differently published.
+With `rosparam` you might also set the `test/random_sense/active`,  `test/random_sense/battery_time` and `test/recharging_time` parameters (detailed below) to modify the behavior of the node.
 
 ### The `planner` Node ###
 

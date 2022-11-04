@@ -56,9 +56,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>scripts.battery_manager</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scripts.battery_manager</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -109,13 +109,13 @@
 <span class="sd">       size (float): Size of total recharging.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">num_chars</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">percent</span> <span class="o">/</span> <span class="p">(</span><span class="n">buf_size</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span> <span class="o">*</span> <span class="n">STEP</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>   <span class="c1"># number of &#39;black&#39; cells of the loading bar</span>
+    <span class="n">num_chars</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">percent</span> <span class="o">/</span> <span class="p">(</span><span class="n">size</span> <span class="o">/</span> <span class="mi">100</span><span class="p">))</span> <span class="o">*</span> <span class="n">STEP</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>   <span class="c1"># number of &#39;black&#39; cells of the loading bar</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">[&quot;</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_chars</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">STEP</span> <span class="o">-</span> <span class="n">num_chars</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;] </span><span class="si">%d</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> DONE&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">percent</span> <span class="o">/</span> <span class="p">(</span><span class="n">buf_size</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)),</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;] </span><span class="si">%d</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> DONE&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">percent</span> <span class="o">/</span> <span class="p">(</span><span class="n">size</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)),</span> <span class="n">end</span> <span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span></div>
 
 <span class="c1">### CLASSES ###</span>
 <div class="viewcode-block" id="BatteryManager"><a class="viewcode-back" href="../../scripts.html#scripts.battery_manager.BatteryManager">[docs]</a><span class="k">class</span> <span class="nc">BatteryManager</span><span class="p">:</span>
@@ -175,7 +175,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">publisher</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_BATTERY_LOW</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">latch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>   <span class="c1"># define the publisher</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_randomness</span><span class="p">:</span>
-            
             <span class="bp">self</span><span class="o">.</span><span class="n">_random_battery_notifier</span><span class="p">(</span><span class="n">publisher</span><span class="p">)</span>   <span class="c1"># randomically the battery becames low</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_manual_battery_notifier</span><span class="p">(</span><span class="n">publisher</span><span class="p">)</span>   <span class="c1"># the battery becames low after an user command</span></div>

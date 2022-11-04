@@ -56,9 +56,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>surveillance_robot.state_machine_helper</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">surveillance_robot.state_machine_helper</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -288,6 +288,10 @@
 
 		<span class="c1"># Call the surveillance policy for computing the next location.</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surveillance_policy</span><span class="p">(</span><span class="n">can_reach</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>        <span class="c1"># if the robot can not reach any other location</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">goal_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_loc</span>   <span class="c1"># remain in the same location</span>
+
 		<span class="k">return</span> <span class="s1">&#39;reach_location&#39;</span></div>
 
 <div class="viewcode-block" id="helper.recharge"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.recharge">[docs]</a>	<span class="k">def</span> <span class="nf">recharge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -376,6 +380,12 @@
 
 		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The urgent locations are </span><span class="si">{</span><span class="n">urgent_loc</span><span class="si">}</span><span class="s1">&#39;</span>
 		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+		<span class="c1"># If there are no reachable loctions.</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">reachable_loc</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The robot can not reach any location&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="k">return</span> <span class="kc">False</span>
 
 		<span class="c1"># If there is a reachabe location which is URGENT, return that location.</span>
 		<span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">reachable_loc</span><span class="p">:</span>

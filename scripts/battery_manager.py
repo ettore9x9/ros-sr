@@ -39,13 +39,13 @@ def loading_bar(percent, size):
        size (float): Size of total recharging.
 
     """
-    num_chars = int((percent / (buf_size / 100)) * STEP / 100)   # number of 'black' cells of the loading bar
+    num_chars = int((percent / (size / 100)) * STEP / 100)   # number of 'black' cells of the loading bar
     print("\r[", end ="")
     for i in range(0, num_chars):
         print("#", end ="")
     for j in range(0, STEP - num_chars - 1):
         print(" ", end ="")
-    print("] %d %% DONE", int(percent / (buf_size / 100)), end ="")
+    print("] %d %% DONE", int(percent / (size / 100)), end ="")
 
 ### CLASSES ###
 class BatteryManager:
@@ -55,6 +55,8 @@ class BatteryManager:
     """
     def __init__(self):
         self._battery_low = False                                           # initialise the flag of the battery low
+        self._recharging_time = rospy.get_param(anm.PARAM_RECHARGING_TIME, 8)   # initialize the time needed for recharging
+            
         self._randomness = rospy.get_param(anm.PARAM_RANDOM_ACTIVE, True)   # initialise randomness, if enabled
         if self._randomness:
             self._random_battery_time = rospy.get_param(anm.PARAM_BATTERY_TIME, [20.0, 40.0])   # initialize the range of battery duration in time
@@ -86,7 +88,7 @@ class BatteryManager:
 
             for i in range(0, STEP):
                 loading_bar(i,STEP)     # print the loading bar
-                rospy.sleep(anm.RECHARGING_TIME / STEP)
+                rospy.sleep(self._recharging_time / STEP)
             print("\n")
 
             log_msg = f'Robot fully charged.'
@@ -105,7 +107,6 @@ class BatteryManager:
         """
         publisher = rospy.Publisher(anm.TOPIC_BATTERY_LOW, Bool, queue_size=1, latch=True)   # define the publisher
         if self._randomness:
-            
             self._random_battery_notifier(publisher)   # randomically the battery becames low
         else:
             self._manual_battery_notifier(publisher)   # the battery becames low after an user command

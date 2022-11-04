@@ -48,7 +48,7 @@ TOPIC_BATTERY_LOW = 'state/battery_low'
 SERVICE_RECHARGING = 'state/recharging'
 
 # Time needed for recharging completely the robot.
-RECHARGING_TIME = 8
+PARAM_RECHARGING_TIME = 'test/recharging_time'
 
 # The duration of the robot's battery.
 # It should be a list `[min_time, max_time]`, and the low battery level

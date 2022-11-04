@@ -56,9 +56,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>scripts.find_qr</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scripts.find_qr</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -107,6 +107,63 @@
     <span class="n">msg</span><span class="o">.</span><span class="n">stamp</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>   <span class="c1"># actual time</span>
     <span class="k">return</span> <span class="n">msg</span></div>
 
+<div class="viewcode-block" id="random_statement_publisher"><a class="viewcode-back" href="../../scripts.html#scripts.find_qr.random_statement_publisher">[docs]</a><span class="k">def</span> <span class="nf">random_statement_publisher</span><span class="p">(</span><span class="n">publisher</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Function to publish statements for the ontology, based on a random delay within the interval </span>
+<span class="sd">	[`statement_timing[0]`, `statement_timing[1]`). The message is published through </span>
+<span class="sd">	the `publisher` input parameter.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">	    publisher (rospy.Publisher): publisher to the statement topic</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">statement_timing</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">PARAM_STATEMENT_TIME</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">])</span>   <span class="c1"># delay between statements</span>
+
+	<span class="n">log_msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Statements are published randomically with a delay &#39;</span>
+	           <span class="sa">f</span><span class="s1">&#39;in the range of [</span><span class="si">{</span><span class="n">statement_timing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">statement_timing</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">) seconds.&#39;</span><span class="p">)</span>
+	<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+	<span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">statement_list</span><span class="p">)</span>
+	<span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>                         <span class="c1"># wait the state machine to be ready, to not loose statements</span>
+	<span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">statement_list</span><span class="p">:</span>        <span class="c1"># for every statement in the statement list</span>
+		<span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">already_stated</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>       <span class="c1"># if the statement has not been already stated</span>
+			<span class="n">msg</span> <span class="o">=</span> <span class="n">init_msg</span><span class="p">()</span>           	   <span class="c1"># initialize the message to be published</span>
+			<span class="n">msg</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">stat</span><span class="o">.</span><span class="n">location</span>   <span class="c1"># fill the message with the location</span>
+			<span class="n">msg</span><span class="o">.</span><span class="n">door</span> <span class="o">=</span> <span class="n">stat</span><span class="o">.</span><span class="n">door</span>           <span class="c1"># fill the message with the door</span>
+			<span class="n">publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>         <span class="c1"># publish the message</span>
+
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Publishing statement: `Door </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">door</span><span class="si">}</span><span class="s1"> is in location </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s1">`&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+
+			<span class="n">stat</span><span class="o">.</span><span class="n">stated</span><span class="p">()</span>                  <span class="c1"># the statement has been stated</span>
+			<span class="n">delay</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">statement_timing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">statement_timing</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>   <span class="c1"># random delay                                                        # 1s delay</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>             <span class="c1"># simulate the searching of a new qr code by sleeping</span></div>
+
+<div class="viewcode-block" id="manual_statement_publisher"><a class="viewcode-back" href="../../scripts.html#scripts.find_qr.manual_statement_publisher">[docs]</a><span class="k">def</span> <span class="nf">manual_statement_publisher</span><span class="p">(</span><span class="n">publisher</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Function to publish statements to be added to the ontology, based on a user keyboard interaction. </span>
+<span class="sd">	The message is published through the `publisher` input parameter.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">	    publisher (rospy.Publisher): publisher to the statement topic</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>    <span class="c1"># loop to enable multiple interactions</span>
+		<span class="n">msg</span> <span class="o">=</span> <span class="n">init_msg</span><span class="p">()</span>           	  <span class="c1"># initialize the message to be published</span>
+
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  # Type the location name and `Enter`, or `quit` and `Enter` to finish.&#39;</span><span class="p">)</span>
+		<span class="n">msg</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39; &gt; &#39;</span><span class="p">)</span>   <span class="c1"># wait for the user input</span>
+
+		<span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">location</span> <span class="o">==</span> <span class="s1">&#39;quit&#39;</span><span class="p">:</span>
+			<span class="k">return</span>
+
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  # Type the door name and `Enter`.&#39;</span><span class="p">)</span>
+		<span class="n">msg</span><span class="o">.</span><span class="n">door</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39; &gt; &#39;</span><span class="p">)</span>       <span class="c1"># wait for the user input</span>
+
+		<span class="n">publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>        <span class="c1"># publish the message</span>
+
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Publishing statement: `Door </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">door</span><span class="si">}</span><span class="s1"> is in location </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s1">`&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span></div>
+
+
 <span class="c1">### MAIN ###</span>
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../scripts.html#scripts.find_qr.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
 	<span class="sd">&quot;&quot;&quot;This function initializes the find_qr ros node. Relying on the informations stored in the</span>
@@ -122,31 +179,10 @@
 	<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Initialise node `</span><span class="si">{</span><span class="n">anm</span><span class="o">.</span><span class="n">NODE_STATEMENT_PUB</span><span class="si">}</span><span class="s1">` with topic `</span><span class="si">{</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_STATEMENT</span><span class="si">}</span><span class="s1">`.&#39;</span>
 	<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
 
-	<span class="n">statement_timing</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">PARAM_STATEMENT_TIME</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">])</span>   <span class="c1"># delay between statements</span>
-
-	<span class="n">log_msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Statements are published with a delay &#39;</span>
-	           <span class="sa">f</span><span class="s1">&#39;in the range of [</span><span class="si">{</span><span class="n">statement_timing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">statement_timing</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">) seconds.&#39;</span><span class="p">)</span>
-	<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
-
-	<span class="k">if</span> <span class="n">randomness</span><span class="p">:</span>                         <span class="c1"># if statements must be choosen randomically, shuffle the list of statements</span>
-		<span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">statement_list</span><span class="p">)</span>
-	<span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>                         <span class="c1"># wait the state machine to be ready, to not loose statements</span>
-	<span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">statement_list</span><span class="p">:</span>        <span class="c1"># for every statement in the statement list</span>
-		<span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">already_stated</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>       <span class="c1"># if the statement has not been already stated</span>
-			<span class="n">msg</span> <span class="o">=</span> <span class="n">init_msg</span><span class="p">()</span>           	   <span class="c1"># initialize the message to be published</span>
-			<span class="n">msg</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">stat</span><span class="o">.</span><span class="n">location</span>   <span class="c1"># fill the message with the location</span>
-			<span class="n">msg</span><span class="o">.</span><span class="n">door</span> <span class="o">=</span> <span class="n">stat</span><span class="o">.</span><span class="n">door</span>           <span class="c1"># fill the message with the door</span>
-			<span class="n">publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>         <span class="c1"># publish the message</span>
-
-			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Publishing statement: `Door </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">door</span><span class="si">}</span><span class="s1"> is in location </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s1">`&#39;</span>
-			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
-
-			<span class="n">stat</span><span class="o">.</span><span class="n">stated</span><span class="p">()</span>                  <span class="c1"># the statement has been stated</span>
-			<span class="k">if</span> <span class="n">randomness</span><span class="p">:</span>
-				<span class="n">delay</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">statement_timing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">statement_timing</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>   <span class="c1"># random delay</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="n">delay</span> <span class="o">=</span> <span class="mi">1</span>                                                          <span class="c1"># 1s delay</span>
-			<span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>             <span class="c1"># simulate the searching of a new qr code by sleeping</span>
+	<span class="k">if</span> <span class="n">randomness</span><span class="p">:</span>
+		<span class="n">random_statement_publisher</span><span class="p">(</span><span class="n">publisher</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">manual_statement_publisher</span><span class="p">(</span><span class="n">publisher</span><span class="p">)</span>
 
 	<span class="n">endmsg</span> <span class="o">=</span> <span class="n">init_msg</span><span class="p">()</span>         <span class="c1"># initialize the end empty message</span>
 	<span class="n">publisher</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">endmsg</span><span class="p">)</span>   <span class="c1"># publish the final message</span></div>

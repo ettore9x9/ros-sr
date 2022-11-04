@@ -218,6 +218,10 @@ class helper():
 
 		# Call the surveillance policy for computing the next location.
 		self.goal_loc = self.surveillance_policy(can_reach)
+
+		if self.goal_loc == False:        # if the robot can not reach any other location
+			self.goal_loc = self.prev_loc   # remain in the same location
+
 		return 'reach_location'
 
 	def recharge(self):
@@ -306,6 +310,12 @@ class helper():
 
 		log_msg = f'The urgent locations are {urgent_loc}'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+		# If there are no reachable loctions.
+		if not reachable_loc:
+			log_msg = f'The robot can not reach any location'
+			rospy.logerr(anm.tag_log(log_msg, LOG_TAG))
+			return False
 
 		# If there is a reachabe location which is URGENT, return that location.
 		for loc in reachable_loc:

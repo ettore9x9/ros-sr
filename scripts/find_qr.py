@@ -37,6 +37,63 @@ def init_msg():
     msg.stamp = rospy.Time.now()   # actual time
     return msg
 
+def random_statement_publisher(publisher):
+	"""Function to publish statements for the ontology, based on a random delay within the interval 
+	[`statement_timing[0]`, `statement_timing[1]`). The message is published through 
+	the `publisher` input parameter.
+
+	Args:
+	    publisher (rospy.Publisher): publisher to the statement topic
+
+	"""
+	statement_timing = rospy.get_param(anm.PARAM_STATEMENT_TIME, [1.0, 5.0])   # delay between statements
+
+	log_msg = (f'Statements are published randomically with a delay '
+	           f'in the range of [{statement_timing[0]}, {statement_timing[1]}) seconds.')
+	rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+	random.shuffle(env.statement_list)
+	rospy.sleep(4)                         # wait the state machine to be ready, to not loose statements
+	for stat in env.statement_list:        # for every statement in the statement list
+		if stat.already_stated == 0:       # if the statement has not been already stated
+			msg = init_msg()           	   # initialize the message to be published
+			msg.location = stat.location   # fill the message with the location
+			msg.door = stat.door           # fill the message with the door
+			publisher.publish(msg)         # publish the message
+
+			log_msg = f'Publishing statement: `Door {msg.door} is in location {msg.location}`'
+			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+			stat.stated()                  # the statement has been stated
+			delay = random.uniform(statement_timing[0], statement_timing[1])   # random delay                                                        # 1s delay
+			rospy.sleep(delay)             # simulate the searching of a new qr code by sleeping
+
+def manual_statement_publisher(publisher):
+	"""Function to publish statements to be added to the ontology, based on a user keyboard interaction. 
+	The message is published through the `publisher` input parameter.
+
+	Args:
+	    publisher (rospy.Publisher): publisher to the statement topic
+
+	"""
+	while not rospy.is_shutdown():    # loop to enable multiple interactions
+		msg = init_msg()           	  # initialize the message to be published
+
+		print('  # Type the location name and `Enter`, or `quit` and `Enter` to finish.')
+		msg.location = input(' > ')   # wait for the user input
+
+		if msg.location == 'quit':
+			return
+
+		print('  # Type the door name and `Enter`.')
+		msg.door = input(' > ')       # wait for the user input
+
+		publisher.publish(msg)        # publish the message
+
+		log_msg = f'Publishing statement: `Door {msg.door} is in location {msg.location}`'
+		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+
+
 ### MAIN ###
 def main():
 	"""This function initializes the find_qr ros node. Relying on the informations stored in the
@@ -52,31 +109,10 @@ def main():
 	log_msg = f'Initialise node `{anm.NODE_STATEMENT_PUB}` with topic `{anm.TOPIC_STATEMENT}`.'
 	rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 
-	statement_timing = rospy.get_param(anm.PARAM_STATEMENT_TIME, [1.0, 5.0])   # delay between statements
-
-	log_msg = (f'Statements are published with a delay '
-	           f'in the range of [{statement_timing[0]}, {statement_timing[1]}) seconds.')
-	rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-
-	if randomness:                         # if statements must be choosen randomically, shuffle the list of statements
-		random.shuffle(env.statement_list)
-	rospy.sleep(4)                         # wait the state machine to be ready, to not loose statements
-	for stat in env.statement_list:        # for every statement in the statement list
-		if stat.already_stated == 0:       # if the statement has not been already stated
-			msg = init_msg()           	   # initialize the message to be published
-			msg.location = stat.location   # fill the message with the location
-			msg.door = stat.door           # fill the message with the door
-			publisher.publish(msg)         # publish the message
-
-			log_msg = f'Publishing statement: `Door {msg.door} is in location {msg.location}`'
-			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-
-			stat.stated()                  # the statement has been stated
-			if randomness:
-				delay = random.uniform(statement_timing[0], statement_timing[1])   # random delay
-			else:
-				delay = 1                                                          # 1s delay
-			rospy.sleep(delay)             # simulate the searching of a new qr code by sleeping
+	if randomness:
+		random_statement_publisher(publisher)
+	else:
+		manual_statement_publisher(publisher)
 
 	endmsg = init_msg()         # initialize the end empty message
 	publisher.publish(endmsg)   # publish the final message

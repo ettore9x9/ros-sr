@@ -65,6 +65,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-scripts.find_qr">Find Qr module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#scripts.find_qr.init_msg"><code class="docutils literal notranslate"><span class="pre">init_msg()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#scripts.find_qr.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.find_qr.manual_statement_publisher"><code class="docutils literal notranslate"><span class="pre">manual_statement_publisher()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scripts.find_qr.random_statement_publisher"><code class="docutils literal notranslate"><span class="pre">random_statement_publisher()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-scripts.planner">Planner module</a><ul>
@@ -117,8 +119,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>scripts</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">scripts</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/scripts.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -266,6 +268,31 @@ point with a delay spanning in [‘self._random_motion_time[0]`, <cite>self._ran
 <a class="reference internal" href="utilities.html#module-surveillance_robot.environment" title="surveillance_robot.environment"><code class="xref py py-mod docutils literal notranslate"><span class="pre">surveillance_robot.environment</span></code></a> module, it publishes one statement at a time, with a random
 delay between them in a range specified by the PARAM_STATEMENT_TIME.
 After that all statements have been pulished, it publishes an empty statement, then exits.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.find_qr.manual_statement_publisher">
+<span class="sig-prename descclassname"><span class="pre">scripts.find_qr.</span></span><span class="sig-name descname"><span class="pre">manual_statement_publisher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">publisher</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/find_qr.html#manual_statement_publisher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.find_qr.manual_statement_publisher" title="Permalink to this definition"></a></dt>
+<dd><p>Function to publish statements to be added to the ontology, based on a user keyboard interaction.
+The message is published through the <cite>publisher</cite> input parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>publisher</strong> (<em>rospy.Publisher</em>) – publisher to the statement topic</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.find_qr.random_statement_publisher">
+<span class="sig-prename descclassname"><span class="pre">scripts.find_qr.</span></span><span class="sig-name descname"><span class="pre">random_statement_publisher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">publisher</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/find_qr.html#random_statement_publisher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.find_qr.random_statement_publisher" title="Permalink to this definition"></a></dt>
+<dd><p>Function to publish statements for the ontology, based on a random delay within the interval
+[<cite>statement_timing[0]</cite>, <cite>statement_timing[1]</cite>). The message is published through
+the <cite>publisher</cite> input parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>publisher</strong> (<em>rospy.Publisher</em>) – publisher to the statement topic</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
