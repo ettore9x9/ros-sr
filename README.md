@@ -163,7 +163,7 @@ With `rosparam` you might also set the `test/random_sense/active`,  `test/random
 
 ### The `planner` Node ###
 
-<img src="https://github.com/buoncubi/arch_skeleton/blob/main/diagrams/planner.png" width="900">
+<img src="" width="900">
 
 The `planner` node implements an action server named `motion/planner`. This is done by the 
 means of the `SimpleActionServer` class based on the `Plan` action message. This action server requires the `state/get_pose/` service of the `robot-state` node and a `target` point given as the goal.
