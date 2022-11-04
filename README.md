@@ -137,7 +137,7 @@ It manages the transitions between states; for the execution of each state it re
 
 This is a representation of the state machine architecture:
 
-<img src="https://github.com/ettore9x9/surveillance_robot/diagrams/state_machine_diagram.png" width="900">
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/state_machine_flowchart.png" width="900">
 
 Where we can immediately recognize the two different phases.
 
@@ -155,7 +155,7 @@ implements two tasks:
 
 For clarity purposes, the `battery_manager` node runs on a dedicated terminal; in case of manual modality, where it waits for an user input, the behavior is the following:
 
-<img src="https://github.com/ettore9x9/surveillance_robot/diagrams/battery_manager_terminal.png" width="900">
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/battery_manager_terminal.png" width="900">
 
 Where the loading bar represents the robot's recharging.
 
