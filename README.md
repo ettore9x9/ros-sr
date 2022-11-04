@@ -7,7 +7,9 @@ Author: *Ettore Sani*
 ## Introduction ##
 
 This repository contains ROS-based software that simulates a surveillance robot.
+
 [Here](https://ettore9x9.github.io/surveillance_robot/), you can find the documentation for this repository.
+
 It has been developed for the first assignment of the Experimental Laboratory class at the University of Genoa.
 
 In particular, the software developed uses a [Smach](http://wiki.ros.org/smach) state machine and builds an ontology with [armor](https://github.com/EmaroLab/armor), using the [armor_py_api](https://github.com/EmaroLab/armor_py_api).
@@ -20,13 +22,15 @@ Moreover, the architecture is developed using a random-based approach to test ea
 
 The scenario involves a surveillance robot operating in an indoor environment.
 The behavior of the robot is divided into two phases and can be summarized:
- 1. The robot starts in the E location of the environment.
- 1. The robot waits for information about the environment.
- 1. The robot builds the toplogical map of the environment.
- 2. The robot moves through locations following a surveillance policy.
- 2. For moving to a new location, the robot must plan a path and control its position.
- 2. When the battery is low, the robot goes to the E location and waits for recharging.
- 2. If a room has not been visited for a certain time, it becomes urgent.
+ 1. Phase 1:
+    - The robot starts in the E location of the environment.
+    - The robot waits for information about the environment.
+    - The robot builds the toplogical map of the environment.
+ 2. Phase 2:
+    - The robot moves through locations following a surveillance policy.
+    - For moving to a new location, the robot must plan a path and control its position.
+    - When the battery is low, the robot goes to the E location and waits for recharging.
+    - If a room has not been visited for a certain time, it becomes urgent.
 
 ### Environment ###
 
@@ -109,12 +113,13 @@ This repository contains a ROS package named `surveillance_robot` that includes 
 ### Dependencies ###
 
 The software dependencies are:
- - [roslaunch](http://wiki.ros.org/roslaunch)
- - [rospy](http://wiki.ros.org/rospy)
- - [actionlib](http://wiki.ros.org/actionlib/DetailedDescription)
- - [SMACH](http://wiki.ros.org/smach)
- - [armor](https://github.com/EmaroLab/armor)
- - [armor_py_api](https://github.com/EmaroLab/armor_py_api)
+ - [rospy](http://wiki.ros.org/rospy): to define ROS nodes, services and related messages.
+ - [roslaunch](http://wiki.ros.org/roslaunch): to launch multiple nodes.
+ - [message_generation](http://wiki.ros.org/message_generation): to generate custom messages.
+ - [actionlib](http://wiki.ros.org/actionlib/DetailedDescription): to define action servers.
+ - [SMACH](http://wiki.ros.org/smach): to define the finite state machine.
+ - [armor](https://github.com/EmaroLab/armor): to use the ontology.
+ - [armor_py_api](https://github.com/EmaroLab/armor_py_api): to use the api for the armor ontology.
 
 
 ## Software Components

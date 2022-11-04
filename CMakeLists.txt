@@ -10,6 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   message_generation
   armor
+  armor_py_api
+  smach
 )
 
 ## Uncomment if the package has a setup.py
