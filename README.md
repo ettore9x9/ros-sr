@@ -142,8 +142,26 @@ This is a representation of the state machine architecture:
 Where we can immediately recognize the two different phases.
 
 As shown in the diagram, there are a couple of sub-state machine:
- - The MOVE state is a sub-state machine
- - The RECHARGE state is a sub-state machine, one of its states is an instance of the above state MOVE, which in this case is in practice a sub-sub-state machine.
+ - The MOVE state is a sub-state machine.
+ - The RECHARGE state is a sub-state machine, one of its states is an instance of the state MOVE, which in this case is in practice a sub-sub-state machine.
+
+The structure of this node is very simple thanks to the `state_machine_helper` module, for example a state is defined as:
+
+```python
+class Buildmap(smach.State):
+    def __init__(self, helper):
+        smach.State.__init__(self, 
+            outcomes=['complete_map','reach_location','just_visited','battery_high','battery_low'],
+            input_keys=['hlp']
+            )
+        self.hlp = helper
+        
+    def execute(self, userdata):
+        self.hlp.build_the_map()
+        return 'complete_map'
+```
+
+The helper class is passed to states as input parameter.
 
 ### The `battery_manager` Node ###
 
@@ -155,7 +173,7 @@ implements two tasks:
 
 For clarity purposes, the `battery_manager` node runs on a dedicated terminal; in case of manual modality, where it waits for an user input, the behavior is the following:
 
-<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/battery_manager_terminal.png" width="900">
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/battery_manager_terminal.png" width="600">
 
 Where the loading bar represents the robot's recharging.
 
@@ -163,131 +181,41 @@ With `rosparam` you might also set the `test/random_sense/active`,  `test/random
 
 ### The `planner` Node ###
 
-<img src="" width="900">
+The `planner` node implements an action server named `motion/planner`. 
+This is done by the means of the `SimpleActionServer` class based on the `Plan` action message. 
+This action server requires  a `starting` and a `target` point given by the goal.
 
-The `planner` node implements an action server named `motion/planner`. This is done by the 
-means of the `SimpleActionServer` class based on the `Plan` action message. This action server requires the `state/get_pose/` service of the `robot-state` node and a `target` point given as the goal.
-
-Given the current and target points, this component returns a plan as a list of `via_points`, 
-which are randomly generated for simplicity. The number of `via_points` can be set with the 
-`test/random_plan_points` parameter addressed below. Moreover, each `via_point` is provided 
-after a delay to simulate computation, which can be tuned through the `test/random_plan_time` 
-parameter. When a new `via_points` is generated, the updated plan is provided as `feedback`. When
-all the `via_points` have been generated, the plan is provided as `results`.
-
-While the picture above shows the actual implementation of the action server, you should not 
-interact with it through the shown topics directly. Instead, you should use a 
-[SimpleActionClient](https://docs.ros.org/en/api/actionlib/html/classactionlib_1_1simple__action__client_1_1SimpleActionClient.html), 
-for instance, as:
-```python
-import actionlib
-from arch_skeleton.msg import PlanAction, PlanGoal
-...
-# Initialize the client and, eventually, wait for the server.
-client = actionlib.SimpleActionClient('motion/planner', PlanAction)
-client.wait_for_server()
-...
-def feedback_callback(feedback):
-    # Do something when feedback is provided.
-    pass  
-...
-def done_callback(status, results):
-    # Do something when results are provided.
-    pass  
-...
-# Send a new `goal`, which is a message of type `PlanGoal`.
-client.send_goal(goal, done_cb = done_callback, feedback_cb = feedback_callback)
-...
-# Get the action server state.
-client.get_state()
-...
-# Cancel all goals (or the current goal only, i.e., `client.cancel_goal()`).
-client.cancel_all_goals()
-```
-
-To observe the behavior of the `planner` you can run the following commands.
-``` bash
-roscore
-# Open a new terminal.
-rosrun arch_skeleton robot_states.py
-# Open a new terminal.
-rosservice call /state/set_pose "pose: { x: 0.11,  y: 0.22}"
-rosparam set config/environment_size '[10,10]'
-rosrun arch_skeleton planner.py
-# Open a new terminal.
-rosrun actionlib_tools axclient.py /motion/planner
-```
-Then, a GUI should appear. Set the goal you want to reach and hit the send button. Eventually, you
-can cancel the goal as well. Also, you can change the `test/random_plan_points` and 
-`test/random_plan_time` parameters (detailed below) to tune the behavior of the planner.
-
-The last command of the above fragment of code requires the `actionlib-tools` package, which can be installed by typing:
-```bash
-sudo apt update
-sudo apt install ros-noetic-actionlib-tools
-```
-
+Provided the initial position, this service plans a variable number of waypoints to reach the goal position. 
+It returns a plan as a list of `via_points`, which are randomly generated for simplicity. 
+The number of `via_points` can be set with the `test/random_plan_points` parameter addressed below. Moreover, each `via_point` is provided after a delay to simulate computation, which can be tuned through the `test/random_plan_time` parameter. 
+When a new `via_points` is generated, the updated plan is provided as `feedback`. 
+When all the `via_points` have been generated, the plan is provided as `results`.
 
 ### The `controller` Node ###
 
-<img src="https://github.com/buoncubi/arch_skeleton/blob/main/diagrams/controller.png" width="900">
+The `controller` node implements an action server named `motion/controller`. 
+This is done by the means of the `SimpleActionServer` class based on the `Control` action message. 
+This action server requires a plan given as a list of `via_points` by the `planner`.
 
-The `controller` node implements an action server named `motion/controller`. This is done by 
-the means of the `SimpleActionServer` class based on the `Control` action message. This action 
-server requires the `state/set_pose/` service of the `robot-state` node and a plan given as a 
-list of `via_points` by the `planner`.
-
-Given the plan and the current robot position, this component iterates for each planned 
-`via_point` and waits to simulate the time spent moving the robot to that location. The 
-waiting time can be tuned through the `test/random_motion_time` parameter detailed below. Each 
-time a `via_point` is reached the `state/set_pose` service is invoked, and `feedback` is 
-provided. When the last `via_point` is reached, the action service provides a result by 
-propagating the current robot position, which has been already updated through the 
-`state/set_pose` service.
-
-Similarly to the `planner` above, instead of using the raw topics, you can rely on a 
-`SimpleActionClient`, which should be instantiated as:
-```python
-client = actionlib.SimpleActionClient('motion/controller', ControlAction)
-```
-This client would accept goals of type `ControlGoal`.
-
-To observe the behavior of the `controller` you can run the following commands.
-``` bash
-roscore
-# Open a new terminal.
-rosrun arch_skeleton robot_states.py
-# Open a new terminal.
-rosservice call /state/set_pose "pose: { x: 0.11,  y: 0.22}"
-#rosparam set config/environment_size '[10,10]'
-rosrun arch_skeleton controller.py
-# Open a new terminal.
-rosrun actionlib_tools axclient.py /motion/controller
-```
-Then, the same GUI seen for the `planner` should appear. In this case, you can test goals 
-formatted as:
-```yaml
-via_points: 
-  - 
-    x: 0.109999999404
-    y: 0.219999998808
-  - 
-    x: 3.61638021469
-    y: 5.05489301682
-  - 
-    x: 0.292526483536
-    y: 6.59786701202
-  - 
-    x: 4.33828830719
-    y: 7.73262834549
-  - 
-    x: 6.0
-    y: 6.0
-```
-You can also change the `test/random_motion_time` parameter (detailed below) to tune
-the behavior of the controller.
+Given the plan, this component iterates for each planned `via_point` and waits to simulate the time spent moving the robot to that location.
+The waiting time can be tuned through the `test/random_motion_time` parameter detailed below. 
+Each time a `via_point` is reached a `feedback` is provided. 
+When the last `via_point` is reached, the action service provides a result by 
+propagating the current robot position.
 
 ### The `find_qr` Node ###
+
+The `find_qr` node implements a publisher that simulates the acquisition of the knowledge of the surrounding environment by the robot.
+
+Depending if the ros parameter `test/random_sense/active` is set to true or false, it shows two different behaviors:
+ - True: It uses the utility component `environment` for the knowledge of doors and locations, publishing them with a random delay in the range specified by the ros parameter `test/random_sense/statement_time`.
+ - False: It asks the user to input the knowledge of the environment, publishing each time a statement until the user exits by typing `quit`.
+
+This image shows the behavior of the find_qr node in case where the randomic publisher is selected:
+
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/find_qr_terminal.png" width="600">
+
+All statements about the environment are published on the topic `map/statement`, and they are made of a location and a door. The knowledge of rooms and corridors is inferred by the reasoner.
 
 ## Utilities components ##
 
@@ -296,12 +224,33 @@ in the `utilities/surveillance_robot` folder.
 
 ### The `state_machine_helper` Module ###
 
+The `state_machine_helper` module manages subscribers and client requests for the node `state_machine` through the helper class.
+It provides several useful methods to exchange information with the ontology, thanks to the api provided by the [armor_py_api](https://github.com/EmaroLab/armor_py_api).
+This module has several interfaces with orther modules, such as `battery_manager`, `find_qr`, `planner` and `controller` modules.
+
+It implements several methods called by the `state_machine` node, such as:
+ - `build_the_map`: called by the **Buildmap** state, that waits until the map is completed, than disjoints all individuals in the ontology, asks the reasoner to reason with the given ontology and queries it for locations that are corridors.
+ - `query_the_ontology`: called by the **Query** state, that asks the ontology about the locations that the robot can reach and chooses one of them according to the battery level of the robot and on the surveillance policy.
+ - `recharge`: called by the **Waitfull** state, that makes a request to the service `state/recharging` that recharges the battery. This service is blocking, and returns only when the battery is fully charged. Then, it puts down the battery_low flag.
+ - `plan_path`: called by the **Planner** state, that makes a request to the action service `motion/planner` that plan the via points between the actual and the goal positions. The goal position is choosen randomically. It waits until the path is planned, then returns.
+ - `control_robot`: called by the **Controller** state, that makes a request to the action service `motion/controller` that controls the robot through viapoints. It waits until the goal point has been reached, updates the ontology and then returns.
+
+The `state_machine_helper` module implements also two callbacks:
+ - The `_Buildmap_cb` to the `map/statement` topic: used for building the ontology. The message received contains a location coupled with a door. If the message is empty, it means that the map is completed, so it raises the map_completed flag.
+ - The `_Battery_cb` to the `/state/battery_low` topic: it triggers when the robot needs to recharge or when the robot is completely charged. It changes the battery_low flag accordingly with the message received.
 
 ### The `architecture_name_mapper` Module ###
 
+The `architecture_name_mapper` module is for organising the package: it stores the names of all nodes, topics and services of the architecture.
+It also provide informations for storing the ontology and a function to print logs with the producer tag.
 
 ### The `environment` Module ###
 
+The `environment` module stores the knowledge about the environment that the `find_qr` node uses to build the default map, when it is in randomic setting.
+
+The default environment is:
+
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/default_environment.png" width="600">
 
 ### Launching the Software
 

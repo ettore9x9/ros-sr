@@ -117,7 +117,7 @@ class helper():
 	def _Buildmap_cb(self, stat):
 		"""Callback of the topic */map/statement* used for building the ontology.
 		The message received is of kind 'Statement' and contains a location coupled with a door.
-		If the message is empty, it means that the map is completed, so it reises the map_completed flag.
+		If the message is empty, it means that the map is completed, so it raises the map_completed flag.
 
 		"""
 		# If the message has an empty location.
@@ -241,7 +241,7 @@ class helper():
 	def plan_path(self):
 		"""Function used by the :class:`scripts.state_machine.Planner` class; it makes a request to the action
 		service that plan the viapoints between the actual and the goal positions. The goal position is choosen
-		randomically. It waits until the path is planned, then exits.
+		randomically. It waits until the path is planned, then returns.
 
 		"""
 		next_point = Point()                             # initialize the goal point
@@ -261,7 +261,7 @@ class helper():
 	def control_robot(self):
 		"""Function used by the :class:`scripts.state_machine.Controller` class; it makes a request to the action
 		service that controls the robot through viapoints. It waits until the goal point has been reached, updates
-		the ontology and then exits.
+		the ontology and then returns.
 
 		"""
 		request = ControlActionGoal()                    # initialize the action service request

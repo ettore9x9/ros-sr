@@ -187,7 +187,7 @@
 <div class="viewcode-block" id="helper._Buildmap_cb"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper._Buildmap_cb">[docs]</a>	<span class="k">def</span> <span class="nf">_Buildmap_cb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;Callback of the topic */map/statement* used for building the ontology.</span>
 <span class="sd">		The message received is of kind &#39;Statement&#39; and contains a location coupled with a door.</span>
-<span class="sd">		If the message is empty, it means that the map is completed, so it reises the map_completed flag.</span>
+<span class="sd">		If the message is empty, it means that the map is completed, so it raises the map_completed flag.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="c1"># If the message has an empty location.</span>
@@ -311,7 +311,7 @@
 <div class="viewcode-block" id="helper.plan_path"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.plan_path">[docs]</a>	<span class="k">def</span> <span class="nf">plan_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;Function used by the :class:`scripts.state_machine.Planner` class; it makes a request to the action</span>
 <span class="sd">		service that plan the viapoints between the actual and the goal positions. The goal position is choosen</span>
-<span class="sd">		randomically. It waits until the path is planned, then exits.</span>
+<span class="sd">		randomically. It waits until the path is planned, then returns.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="n">next_point</span> <span class="o">=</span> <span class="n">Point</span><span class="p">()</span>                             <span class="c1"># initialize the goal point</span>
@@ -331,7 +331,7 @@
 <div class="viewcode-block" id="helper.control_robot"><a class="viewcode-back" href="../../utilities.html#surveillance_robot.state_machine_helper.helper.control_robot">[docs]</a>	<span class="k">def</span> <span class="nf">control_robot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;Function used by the :class:`scripts.state_machine.Controller` class; it makes a request to the action</span>
 <span class="sd">		service that controls the robot through viapoints. It waits until the goal point has been reached, updates</span>
-<span class="sd">		the ontology and then exits.</span>
+<span class="sd">		the ontology and then returns.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="n">request</span> <span class="o">=</span> <span class="n">ControlActionGoal</span><span class="p">()</span>                    <span class="c1"># initialize the action service request</span>

@@ -90,11 +90,6 @@ NODE_STATEMENT_PUB = 'statement_pub'
 # The name of the topic where the statements are published.
 TOPIC_STATEMENT = 'map/statement'
 
-# The name of a boolean parameter to active random generation of statements.
-# If the value is `False` the statements are generated in sequence. 
-# Instead, random statement sequence will be generate if `True`.
-PARAM_RANDOM_STATEMENT_ACTIVE = 'test/random_sense/active'
-
 # The delay between statements.
 # It should be a list `[min_time, max_time]`, and the new statement
 # will occur after a random number of seconds within such an interval.

@@ -125,6 +125,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_battery_low</span> <span class="o">=</span> <span class="kc">False</span>                                           <span class="c1"># initialise the flag of the battery low</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recharging_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">PARAM_RECHARGING_TIME</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>   <span class="c1"># initialize the time needed for recharging</span>
+            
         <span class="bp">self</span><span class="o">.</span><span class="n">_randomness</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">PARAM_RANDOM_ACTIVE</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>   <span class="c1"># initialise randomness, if enabled</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_randomness</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_random_battery_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">PARAM_BATTERY_TIME</span><span class="p">,</span> <span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">])</span>   <span class="c1"># initialize the range of battery duration in time</span>
@@ -156,7 +158,7 @@
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">STEP</span><span class="p">):</span>
                 <span class="n">loading_bar</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">STEP</span><span class="p">)</span>     <span class="c1"># print the loading bar</span>
-                <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">RECHARGING_TIME</span> <span class="o">/</span> <span class="n">STEP</span><span class="p">)</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_recharging_time</span> <span class="o">/</span> <span class="n">STEP</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Robot fully charged.&#39;</span>

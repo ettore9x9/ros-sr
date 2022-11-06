@@ -199,7 +199,7 @@ message received.</p>
 <span class="sig-name descname"><span class="pre">_Buildmap_cb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stat</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper._Buildmap_cb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper._Buildmap_cb" title="Permalink to this definition"></a></dt>
 <dd><p>Callback of the topic <em>/map/statement</em> used for building the ontology.
 The message received is of kind ‘Statement’ and contains a location coupled with a door.
-If the message is empty, it means that the map is completed, so it reises the map_completed flag.</p>
+If the message is empty, it means that the map is completed, so it raises the map_completed flag.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -215,7 +215,7 @@ the given ontology and queries it for locations that are corridors.</p>
 <span class="sig-name descname"><span class="pre">control_robot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.control_robot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.control_robot" title="Permalink to this definition"></a></dt>
 <dd><p>Function used by the <a class="reference internal" href="scripts.html#scripts.state_machine.Controller" title="scripts.state_machine.Controller"><code class="xref py py-class docutils literal notranslate"><span class="pre">scripts.state_machine.Controller</span></code></a> class; it makes a request to the action
 service that controls the robot through viapoints. It waits until the goal point has been reached, updates
-the ontology and then exits.</p>
+the ontology and then returns.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -223,7 +223,7 @@ the ontology and then exits.</p>
 <span class="sig-name descname"><span class="pre">plan_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/surveillance_robot/state_machine_helper.html#helper.plan_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#surveillance_robot.state_machine_helper.helper.plan_path" title="Permalink to this definition"></a></dt>
 <dd><p>Function used by the <a class="reference internal" href="scripts.html#scripts.state_machine.Planner" title="scripts.state_machine.Planner"><code class="xref py py-class docutils literal notranslate"><span class="pre">scripts.state_machine.Planner</span></code></a> class; it makes a request to the action
 service that plan the viapoints between the actual and the goal positions. The goal position is choosen
-randomically. It waits until the path is planned, then exits.</p>
+randomically. It waits until the path is planned, then returns.</p>
 </dd></dl>
 
 <dl class="py method">

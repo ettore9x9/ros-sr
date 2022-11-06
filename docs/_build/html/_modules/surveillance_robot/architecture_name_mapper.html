@@ -118,7 +118,7 @@
 <span class="n">SERVICE_RECHARGING</span> <span class="o">=</span> <span class="s1">&#39;state/recharging&#39;</span>
 
 <span class="c1"># Time needed for recharging completely the robot.</span>
-<span class="n">RECHARGING_TIME</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">PARAM_RECHARGING_TIME</span> <span class="o">=</span> <span class="s1">&#39;test/recharging_time&#39;</span>
 
 <span class="c1"># The duration of the robot&#39;s battery.</span>
 <span class="c1"># It should be a list `[min_time, max_time]`, and the low battery level</span>
@@ -159,11 +159,6 @@
 
 <span class="c1"># The name of the topic where the statements are published.</span>
 <span class="n">TOPIC_STATEMENT</span> <span class="o">=</span> <span class="s1">&#39;map/statement&#39;</span>
-
-<span class="c1"># The name of a boolean parameter to active random generation of statements.</span>
-<span class="c1"># If the value is `False` the statements are generated in sequence. </span>
-<span class="c1"># Instead, random statement sequence will be generate if `True`.</span>
-<span class="n">PARAM_RANDOM_STATEMENT_ACTIVE</span> <span class="o">=</span> <span class="s1">&#39;test/random_sense/active&#39;</span>
 
 <span class="c1"># The delay between statements.</span>
 <span class="c1"># It should be a list `[min_time, max_time]`, and the new statement</span>
