@@ -25,12 +25,12 @@ The behavior of the robot is divided into two phases and can be summarized:
  1. Phase 1:
     - The robot starts in the E location of the environment.
     - The robot waits for information about the environment.
-    - The robot builds the toplogical map of the environment.
+    - The robot builds the topological map of the environment.
  2. Phase 2:
     - The robot moves through locations following a surveillance policy.
     - For moving to a new location, the robot must plan a path and control its position.
     - When the battery is low, the robot goes to the E location and waits for recharging.
-    - If a room has not been visited for a certain time, it becomes urgent.
+    - If a room has not been visited for some time, it becomes urgent.
 
 ### Environment ###
 
@@ -52,7 +52,7 @@ This is a sketch of the implementation:
 ```python
 random.shuffle(reachable_loc)   # shuffle the reachable location, not to have a preference between them.
 
-    # If there is a reachabe location that is URGENT, return that location.
+    # If there is a reachable location that is URGENT, return that location.
     for loc in reachable_loc:
       if loc in urgent_loc:
         return loc
@@ -62,7 +62,7 @@ random.shuffle(reachable_loc)   # shuffle the reachable location, not to have a 
       if loc in corridors:
         return loc
 
-    # Return a randomic location (because of shuffling them).
+    # Return a random location (because of shuffling them).
     return reachable_loc[0]
 ```
 
@@ -72,24 +72,24 @@ The whole scenario has the following assumptions:
  - The robot moves in a 2D environment.
  - The environment has no obstacles.
  - The environment does not change in time.
- - The robot generates a trajectory as a list of via points to follow, given its current and target positions. Following this list of via points, the robot can always reach the goal position.
+ - The robot generates a trajectory as a list of via points to follow, given its current and target positions; by following this list of via points, the robot can always reach the goal position.
  - The battery can become low at any time.
- - Even if the battery is low, the robot goes to the recharging location only if it is reachable. Otherwise, it continues traveling into the environment.
- - If the battery goes down while building the map, the robot finish to build it and then recharges.
+ - Even if the battery is low, the robot goes to the recharging location only if it is reachable; otherwise, it continues traveling into the environment.
+ - If the battery goes down while building the map, the robot finishes the build and then recharges.
  - The starting and the recharging positions can be different.
 
 ## Project Structure
 
 ### Package List
 
-This repository contains a ROS package named `surveillance_robot` that includes the following resources.
+This repository contains a ROS package named `surveillance_robot` that includes the following resources:
  - [CMakeList.txt](CMakeList.txt): File to configure this package.
  - [package.xml](package.xml): File to configure this package.
  - [setup.py](setup.py): File to `import` python modules from the `utilities` folder into the files in the `script` folder. 
  - [launch/](launch/): Contains the configuration to launch this package.
     - [manual_watch_over.launch](launcher/manual_watch_over.launch): It launches this package allowing for a keyboard-based interface.
     - [random_watch_over.launch](launcher/random_watch_over.launch): It launches this package with random-based stimulus.
- - [msg/](msg/): It contains the message exchanged through ROS topics.
+ - [msg/](msg/): It contains messages exchanged through ROS topics.
     - [Statement.msg](msg/Statement.msg): It is the message representing a statement about the environment (e.g., the location 'E' has room 'D6').
     - [Point.msg](msg/Point.msg): It is the message representing a 2D point.
  - [action/](action/): It contains the definition of each action server used by this software.
@@ -99,14 +99,14 @@ This repository contains a ROS package named `surveillance_robot` that includes 
  - [scripts/](scripts/): It contains the implementation of each software component.
     - [state_machine.py](scripts/state_machine.py): Module to implement the state_machine node of the architecture, managing the transition between states.
     - [battery_manager.py](scripts/battery_manager.py): Module to implement the battery_manager node of the architecture, publishing a message when the robot has the battery low and providing a service for recharging it when at the base.
-    - [find_qr.py](scripts/find_qr.py): Module to implement the find_qr node of the architecture, that simulates the acquisition of the knowledge of the surrounding environment by the robot.
+    - [find_qr.py](scripts/find_qr.py): Module to implement the find_qr node of the architecture that simulates the acquisition of the knowledge of the surrounding environment by the robot.
     - [planner.py](scripts/planner.py): It is a dummy implementation of a motion planner.
     - [controller.py](scripts/controller.py): It is a dummy implementation of a motion 
       controller.
  - [utilities/surveillance_robot/](utilities/surveillance_robot/): It contains auxiliary python files, 
    which are exploited by the files in the `scripts` folder.
     - [architecture_name_mapper.py](utilities/surveillance_robot/architecture_name_mapper.py): Module to store the names of all nodes, topics, and services of the architecture.
-    - [state_machine_helper.py](utilities/surveillance_robot/state_machine_helper.py): Module to manage subscribers and client requests for the module state_machine module through the helper class.
+    - [state_machine_helper.py](utilities/surveillance_robot/state_machine_helper.py): Module to manage subscribers and client requests for the state_machine module through the helper class.
     - [environment.py](utilities/surveillance_robot/environment.py): Module to store the knowledge about the environment.
  - [diagrams/](diagrams/): It contains the diagrams shown below in this README file.
  - [docs/](docs/): It contains the documentation source.
@@ -133,7 +133,7 @@ in the `scripts/` folder.
 ### The `state_machine` Node ###
 
 The `state_machine` is a node that defines the finite state machine of the architecture.
-It manages the transitions between states; for the execution of each state it relies on the class `helper` of the `state_machine_helper` module.
+It manages the transitions between states; for the execution of each state, it relies on the class `helper` of the `state_machine_helper` module.
 
 This is a representation of the state machine architecture:
 
@@ -141,11 +141,11 @@ This is a representation of the state machine architecture:
 
 Where we can immediately recognize the two different phases.
 
-As shown in the diagram, there are a couple of sub-state machine:
+As shown in the diagram, there is a couple of sub-state machines:
  - The MOVE state is a sub-state machine.
- - The RECHARGE state is a sub-state machine, one of its states is an instance of the state MOVE, which in this case is in practice a sub-sub-state machine.
+ - The RECHARGE state is a sub-state machine; one of its states is an instance of the state MOVE, which now is a sub-sub-state machine.
 
-The structure of this node is very simple thanks to the `state_machine_helper` module, for example a state is defined as:
+The structure of this node is simple thanks to the `state_machine_helper` module; for example, a state is defined as:
 
 ```python
 class Buildmap(smach.State):
@@ -161,61 +161,60 @@ class Buildmap(smach.State):
         return 'complete_map'
 ```
 
-The helper class is passed to states as input parameter.
+The helper class is passed to states as an input parameter.
 
 ### The `battery_manager` Node ###
 
 
-The `battery_manager` is a node that deal with the battery of the robot and it 
-implements two tasks:
- - It publishes when the robot has low battery. Depending on the modality, the battery low can be triggered randomically or by an user input.
- - It implements a service to recharge the robot. It waits for a specified recharging time, then returns the success of the operation.
+The `battery_manager` is a node that deals with the battery of the robot, and it implements two tasks:
+ - It publishes when the robot has a low battery; depending on the modality, the battery low can be triggered randomically or by user input.
+ - It implements a service to recharge the robot that waits for a specified recharging time, then returns success.
 
-For clarity purposes, the `battery_manager` node runs on a dedicated terminal; in case of manual modality, where it waits for an user input, the behavior is the following:
+For clarity purposes, the `battery_manager` node runs on a dedicated terminal; in the case of manual modality, where it waits for user input, the behavior is the following:
 
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/battery_manager_terminal.png" width="600">
 
 Where the loading bar represents the robot's recharging.
 
-With `rosparam` you might also set the `test/random_sense/active`,  `test/random_sense/battery_time` and `test/recharging_time` parameters (detailed below) to modify the behavior of the node.
+With `rosparam` you might also set the `test/random_sense/active`,  `test/random_sense/battery_time`, and `test/recharging_time` parameters (detailed below) to modify the behavior of the node.
 
 ### The `planner` Node ###
 
 The `planner` node implements an action server named `motion/planner`. 
-This is done by the means of the `SimpleActionServer` class based on the `Plan` action message. 
-This action server requires  a `starting` and a `target` point given by the goal.
+This is done thanks to the `SimpleActionServer` class based on the `Plan` action message. 
+This action server requires a `starting` and a `target` point given by the goal.
 
 Provided the initial position, this service plans a variable number of waypoints to reach the goal position. 
-It returns a plan as a list of `via_points`, which are randomly generated for simplicity. 
+For simplicity, it returns a plan as a list of `via_points` generated randomically.
 The number of `via_points` can be set with the `test/random_plan_points` parameter addressed below. Moreover, each `via_point` is provided after a delay to simulate computation, which can be tuned through the `test/random_plan_time` parameter. 
 When a new `via_points` is generated, the updated plan is provided as `feedback`. 
-When all the `via_points` have been generated, the plan is provided as `results`.
+When all the `via_points` have been generated the plan is provided as `results`.
 
 ### The `controller` Node ###
 
 The `controller` node implements an action server named `motion/controller`. 
-This is done by the means of the `SimpleActionServer` class based on the `Control` action message. 
+This is done thanks to the `SimpleActionServer` class based on the `Control` action message. 
 This action server requires a plan given as a list of `via_points` by the `planner`.
 
 Given the plan, this component iterates for each planned `via_point` and waits to simulate the time spent moving the robot to that location.
 The waiting time can be tuned through the `test/random_motion_time` parameter detailed below. 
-Each time a `via_point` is reached a `feedback` is provided. 
-When the last `via_point` is reached, the action service provides a result by 
-propagating the current robot position.
+Each time a `via_point` is reached, a `feedback` is provided. 
+When the last `via_point` is reached, the action service provides a result by propagating the current robot position.
 
 ### The `find_qr` Node ###
 
-The `find_qr` node implements a publisher that simulates the acquisition of the knowledge of the surrounding environment by the robot.
+The `find_qr` node implements a publisher that simulates the robot's acquisition of knowledge of the surrounding environment.
 
 Depending if the ros parameter `test/random_sense/active` is set to true or false, it shows two different behaviors:
  - True: It uses the utility component `environment` for the knowledge of doors and locations, publishing them with a random delay in the range specified by the ros parameter `test/random_sense/statement_time`.
- - False: It asks the user to input the knowledge of the environment, publishing each time a statement until the user exits by typing `quit`.
+ - False: It asks the user to type the knowledge of the environment, publishing statements until the user exits by typing `quit`.
 
-This image shows the behavior of the find_qr node in case where the randomic publisher is selected:
+This image shows the behavior of the find_qr node in the case where the random publisher is selected:
 
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/find_qr_terminal.png" width="600">
 
-All statements about the environment are published on the topic `map/statement`, and they are made of a location and a door. The knowledge of rooms and corridors is inferred by the reasoner.
+All the environment's statements are published on the topic `map/statement`; they are made of a location and a door. 
+The knowledge of rooms and corridors is inferred by the reasoner.
 
 ## Utilities components ##
 
@@ -225,28 +224,28 @@ in the `utilities/surveillance_robot` folder.
 ### The `state_machine_helper` Module ###
 
 The `state_machine_helper` module manages subscribers and client requests for the node `state_machine` through the helper class.
-It provides several useful methods to exchange information with the ontology, thanks to the api provided by the [armor_py_api](https://github.com/EmaroLab/armor_py_api).
-This module has several interfaces with orther modules, such as `battery_manager`, `find_qr`, `planner` and `controller` modules.
+It provides several methods to exchange information with the ontology, thanks to the api provided by the [armor_py_api](https://github.com/EmaroLab/armor_py_api).
+This module has several interfaces with other modules, such as `battery_manager`, `find_qr`, `planner`, and `controller` modules.
 
 It implements several methods called by the `state_machine` node, such as:
- - `build_the_map`: called by the **Buildmap** state, that waits until the map is completed, than disjoints all individuals in the ontology, asks the reasoner to reason with the given ontology and queries it for locations that are corridors.
- - `query_the_ontology`: called by the **Query** state, that asks the ontology about the locations that the robot can reach and chooses one of them according to the battery level of the robot and on the surveillance policy.
- - `recharge`: called by the **Waitfull** state, that makes a request to the service `state/recharging` that recharges the battery. This service is blocking, and returns only when the battery is fully charged. Then, it puts down the battery_low flag.
- - `plan_path`: called by the **Planner** state, that makes a request to the action service `motion/planner` that plan the via points between the actual and the goal positions. The goal position is choosen randomically. It waits until the path is planned, then returns.
- - `control_robot`: called by the **Controller** state, that makes a request to the action service `motion/controller` that controls the robot through viapoints. It waits until the goal point has been reached, updates the ontology and then returns.
+ - `build_the_map`: called by the **Buildmap** state, which waits until the map is completed; then disjoints all individuals in the ontology, asks the reasoner to reason with the given ontology, and queries it for locations that are corridors.
+ - `query_the_ontology`: called by the **Query** state, that asks the ontology about the locations that the robot can reach and chooses one of them according to the battery level of the robot and the surveillance policy.
+ - `recharge`: called by the **Waitfull** state, which requests the service `state/recharging` that recharges the battery. This service is blocking and returns when the battery is fully charged. Then it puts down the battery_low flag.
+ - `plan_path`: called by the **Planner** state, which requests the action service `motion/planner` that plan the via points between the actual and the goal positions. The goal position is chosen randomically. It waits until the path is planned, then returns.
+ - `control_robot`: called by the **Controller** state, which requests the action service `motion/controller` that controls the robot through waypoints. It waits until the goal point has been reached, updates the ontology, then returns.
 
-The `state_machine_helper` module implements also two callbacks:
- - The `_Buildmap_cb` to the `map/statement` topic: used for building the ontology. The message received contains a location coupled with a door. If the message is empty, it means that the map is completed, so it raises the map_completed flag.
- - The `_Battery_cb` to the `/state/battery_low` topic: it triggers when the robot needs to recharge or when the robot is completely charged. It changes the battery_low flag accordingly with the message received.
+The `state_machine_helper` module implements two callbacks:
+ - The `_Buildmap_cb` to the `map/statement` topic: is used for building the ontology. The message received contains a location coupled with a door. If the message is empty, it means that the map is completed, so it raises the map_completed flag.
+ - The `_Battery_cb` to the `/state/battery_low` topic: it triggers when the robot needs to recharge or when the robot is completely charged. It changes the battery_low flag according to the received message.
 
 ### The `architecture_name_mapper` Module ###
 
-The `architecture_name_mapper` module is for organising the package: it stores the names of all nodes, topics and services of the architecture.
-It also provide informations for storing the ontology and a function to print logs with the producer tag.
+The `architecture_name_mapper` module organizes the package: it stores the names of all nodes, topics, and services of the architecture.
+It also provides information for storing the ontology and a function to print logs with the producer tag.
 
 ### The `environment` Module ###
 
-The `environment` module stores the knowledge about the environment that the `find_qr` node uses to build the default map, when it is in randomic setting.
+The `environment` module stores the knowledge about the environment that the `find_qr` node uses to build the default map if it is in a random setting.
 
 The default environment is:
 
@@ -268,70 +267,28 @@ Follow these steps to install the software.
 
 ### Launchers
 
-Use the following command to launch the software with a keyboard-based interface for speech, 
-gesture, and battery levels.
+Use the following command to launch the software with a keyboard-based interface:
 ```bash
-roslaunch arch_skeleton manual_sense.launch
+roslaunch surveillance_robot manual_watch_over.launch
 ```
 
-Use the following command to launch the software with randomized stimulus, 
-i.e., speech, gesture, and battery level.
+Use the following command to launch the software with randomized stimulus:
 ```bash
-roslaunch arch_skeleton random_sense.launch
+roslaunch surveillance_robot random_watch_over.launch
 ```
 
 ### ROS Parameters
 
 This software requires the following ROS parameters.
- 
- - `config/environment_size`: It represents the environment boundaries as a list of two float
-   numbers, i.e., `[x_max, y_max]`. The environment will have the `x`-th coordinate spanning
-   in the interval `[0, x_max)`, while the `y`-th coordinate in `[0, y_max)`.
-
- - `config/user_pose`: It represents the user's position as a list of two float numbers,
-   i.e., `[x, y]`. This pose should be within the `environmet_size`.
-
- - `config/speech_commands`: It defines the keywords that the user can say to start and end
-   the interaction. It must be a list made of two strings (e.g., `["Hello", "Bye"]`) that define
-   the keyword to start and end the interaction, respectively.
-
- - `state/initial_pose`: It represents the initial robot pose as a list of two float numbers, 
-   i.e., `[x, y]`. This pose should be within the `environmet_size`.
-
- - `test/random_plan_points`: It represents the number of via points in a plan, and it should be
-   a list of two integer numbers `[min_n, max_n]`. A random value within such an interval will be
-   chosen to simulate plans of different lengths.
-
- - `test/random_plan_time`: It represents the time required to compute the next via point of the 
-   plan, and it should be a list of two float numbers, i.e., `[min_time, max_time]` in seconds. 
-   A random value within such an interval will be chosen to simulate the time required to 
-   compute the next via points.
-
- - `test/random_motion_time`: It represents the time required to reach the next via point, and 
-   it should be a list of two float numbers, i.e., `[min_time, max_time]` in seconds. A random
-   value within such an interval will be chosen to simulate the time required to reach the next 
-   via points. 
-
- - `test/random_sense/active`: It is a boolean value that activates (i.e., `True`) or 
-   deactivates (`False`) the random-based generation of stimulus (i.e., speech, gesture, and 
-   battery level). If this parameter is `True`, then the three parameters below are also 
-   required.  If it is `False`, then the three parameters below are not used.
+ - `test/random_plan_points`: It represents the number of via points in a plan, and it should be a list of two integer numbers `[min_n, max_n]`. A random value within such an interval will be chosen to simulate plans of different lengths.
+ - `test/random_plan_time`: It represents the time required to compute the next via point of the plan, and it should be a list of two float numbers, i.e., `[min_time, max_time]` in seconds. A random value within such an interval will be chosen to simulate the time required to compute the next via points.
+ - `test/random_motion_time`: It represents the time required to reach the next via point, and it should be a list of two float numbers, i.e., `[min_time, max_time]` in seconds. A random value within such an interval will be chosen to simulate the time required to reach the next via points.
+ - `test/recharging_time`: It represents the time required for the robot to get fully charged.
+ - `test/random_sense/active`: It is a boolean value that activates (i.e., `True`) or deactivates (`False`) the random-based stimulus' generation. If this parameter is `True` the three parameters below are also required.  If it is `False` the three parameters below are not used.
  
 
-In addition, the `random_sense.launch` also requires the following three parameters. This occurs because `test/random_sense/active` has been set to `True`.
-
- - `test/random_sense/gesture_time`: It indicates the time passed within two randomly generated 
-   pointing gestures. It should be a list of two float numbers, i.e., `[min_time, max_time]` in 
-   seconds, and the time passed between gestures will be a random value within such an interval.
-
- - `test/random_sense/speech_time`: It indicates the time passed within two randomly generated
-   commands based on speech. It should be a list of two float numbers, i.e., 
-   `[min_time, max_time]` in seconds, and the time passed between speech-based commands will be 
-   a random value within such an interval.
-
- - `test/random_sense/battery_time`: It indicates the time passed within battery state changes 
-   (i.e., low/high). It should be a list of two float numbers, i.e., `[min_time, max_time]` in 
-   seconds and the time passed between changes in battery levels will be a random value within 
-   such an interval.
+In addition, the `random_watch_over.launch` also requires the following parameters. This occurs because `test/random_sense/active` has been set to `True`.
+ - `test/random_sense/battery_time`: It indicates the time passed within the battery state becomes low. It should be a list of two float numbers, i.e., `[min_time, max_time]` in seconds and the time passed after the robot starts moving after a recharge will be a random value within such an interval.
+ - `test/random_sense/statement_time`: It indicates the time passed between publishing two statements. It should be a list of two float numbers, i.e., `[min_time, max_time]` in seconds, and the time passed after publishing a statement will be a random value within such an interval.
    
 ---

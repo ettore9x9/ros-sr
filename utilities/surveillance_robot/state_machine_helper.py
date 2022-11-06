@@ -317,7 +317,7 @@ class helper():
 			rospy.logerr(anm.tag_log(log_msg, LOG_TAG))
 			return False
 
-		# If there is a reachabe location which is URGENT, return that location.
+		# If there is a reachable location which is URGENT, return that location.
 		for loc in reachable_loc:
 			if loc in urgent_loc:
 				return loc
@@ -327,5 +327,5 @@ class helper():
 			if loc in self._corridors:
 				return loc
 
-		# Return a randomic location (because of shuffling them).
+		# Return a random location (because of shuffling them).
 		return reachable_loc[0]
