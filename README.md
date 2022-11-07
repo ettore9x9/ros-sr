@@ -1,6 +1,7 @@
 # Surveillance robot #
 **A ROS-based simulation of a surveillance robot in a close environment.**  
 Author: *Ettore Sani*
+mail: 5322242@studenti.unige.it
 
 ---
 
@@ -84,7 +85,7 @@ Given the scenario and the assumptions, the software architecture is developed a
 
 ### Component diagram ###
 
-<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/component_diagram.png" width="900">
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/component_diagram.png" width="600">
 
 In the component diagram we can see that the `state_machine` node is the centre of the whole architecture.
 Each other software component simulates a task performed by the robot, such as planning the trajectory of the robot.
