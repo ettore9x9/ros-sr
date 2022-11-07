@@ -48,7 +48,7 @@ The robot must follow a surveillance policy; the implemented one is the followin
 
 The surveillance policy is defined in the *surveillance_policy* method of the *helper* class defined in the script [state_machine_helper.py](utilities/surveillance_robot/state_machine_helper.py).
 
-This is a sketch of the implementation:
+This is a sketch of the policy implementation:
 ```python
 random.shuffle(reachable_loc)   # shuffle the reachable location, not to have a preference between them.
 
@@ -77,6 +77,52 @@ The whole scenario has the following assumptions:
  - Even if the battery is low, the robot goes to the recharging location only if it is reachable; otherwise, it continues traveling into the environment.
  - If the battery goes down while building the map, the robot finishes the build and then recharges.
  - The starting and the recharging positions can be different.
+
+## Software architecture ##
+
+Given the scenario and the assumptions, the software architecture is developed accordingly.
+
+### Component diagram ###
+
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/component_diagram.png" width="900">
+
+In the component diagram we can see that the `state_machine` node is the centre of the whole architecture.
+Each other software component simulates a task performed by the robot, such as planning the trajectory of the robot.
+The `battery_manager` component provides two interfaces with the state_machine, that are:
+ - *Bool*: a message that triggers when the robot gots low battery, defined in the standard ros service library.
+ - *SetBool*: a service used for recharging the robot, defined in the standard ros service library.
+
+
+### Sequence diagram ###
+
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/temporal_diagram.png" width="900">
+
+The sequence diagram shows two important aspects of the architecture:
+ - The `find_qr` node executes until all statements are published, then publishes an end message and exits. It simulates the phase 1 of the scenario: when the robot collects data from the environment.
+ - The `battery_manager` node is always active, publishing when the robot gots low battery. It is called by the `state_machine` node for recharging the robot, implemented as a blocking service.
+
+### States diagram ###
+
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/states_diagram.png" width="900">
+
+The states diagram is made from the point of view of the state machine, for more details on each state see the state machine diagram in the dedicated section.
+
+The phase 2 is an infinite loop starting always with the query to the ontology to retreive the reachable locations.
+After each robot's movement, the ontology is updated, taking care of the time stamps.
+
+### ROS messages and actions ###
+
+For building interfaces between nodes, in this package there are some custom messages and actions:
+ - `Point.msg`: 2D point in space, defined by x and y coordinates.
+ - `Statement.msg`: couple of a door and a location, with a timestamp. It represents a statement retreived from the environment, to be stored in the ontology.
+ - `Plan.action`: motion planning interface, depending on the `Point.msg`.
+   - *goal*: target and actual points.
+   - *result*: list of via points.
+   - *feedback*: list of via_points computed so far.
+ - `Control.action`: motion controlling interface, depending on the `Point.msg`.
+   - *goal*: list of via points.
+   - *result*: reached point.
+   - *feedback*: last via point reached so far.
 
 ## Project Structure
 
