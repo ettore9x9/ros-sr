@@ -211,6 +211,8 @@ class Buildmap(smach.State):
 
 The helper class is passed to states as an input parameter.
 
+This is an example of the state_machine node terminal, showing the various state transitions:
+
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/state_machine_terminal.png" width="600">
 
 ### The `battery_manager` Node ###
@@ -268,7 +270,7 @@ This image shows the behavior of the find_qr node in the case where the random p
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/find_qr_terminal.png" width="600">
 
 All the environment's statements are published on the topic `map/statement`; they are made of a location and a door. 
-The knowledge of rooms and corridors is inferred by the reasoner.
+The knowledge of rooms and corridors is inferred after by the reasoner.
 
 ## Utilities components ##
 
