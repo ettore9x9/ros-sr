@@ -1,7 +1,6 @@
 # Surveillance robot #
 **A ROS-based simulation of a surveillance robot in a close environment.**  
-Author: *Ettore Sani*
-mail: 5322242@studenti.unige.it
+Author: *Ettore Sani* 5322242@studenti.unige.it
 
 ---
 
@@ -11,7 +10,7 @@ This repository contains ROS-based software that simulates a surveillance robot.
 
 [Here](https://ettore9x9.github.io/surveillance_robot/), you can find the documentation for this repository.
 
-It has been developed for the first assignment of the Experimental Laboratory class at the University of Genoa.
+This software architecture has been developed for the first assignment of the Experimental Laboratory class at the University of Genoa.
 
 In particular, the software developed uses a [Smach](http://wiki.ros.org/smach) state machine and builds an ontology with [armor](https://github.com/EmaroLab/armor), using the [armor_py_api](https://github.com/EmaroLab/armor_py_api).
 The robot can store sentences provided by an external node about the environment in the ontology and call the reasoner to retrieve information; it also implements a surveillance policy for visiting the environment.
@@ -22,7 +21,7 @@ Moreover, the architecture is developed using a random-based approach to test ea
 ## Scenario ##
 
 The scenario involves a surveillance robot operating in an indoor environment.
-The behavior of the robot is divided into two phases and can be summarized:
+The behavior of the robot is divided into two phases and can be summarized in this way:
  1. Phase 1:
     - The robot starts in the E location of the environment.
     - The robot waits for information about the environment.
@@ -91,7 +90,12 @@ In the component diagram, we can see that the `state_machine` node is the center
 Each other software component simulates a task performed by the robot, such as planning the trajectory of the robot.
 The `battery_manager` component provides two interfaces with the state_machine, that are:
  - *Bool*: a message that triggers when the robot has a low battery, defined in the standard ros service library.
- - *SetBool*: a service used for recharging the robot, defined in the standard ros service library.
+ - *SetBool*: a service used for recharging the robot, defined in the standard ros action library.
+
+The custom messages and actions `Statement.msg`, `Control.action`, and `Plan.action` are described below in the dedicated section.
+
+In this architecture, we are only interested in interfaces between the `state_machine` and the other components.
+In a more general case, the tasks performed by the robot such as `controller`, `find_qr`, and `battery_manager` have other interfaces that communicates with the sensors and the actuators of the robot.
 
 
 ### Sequence diagram ###
@@ -102,6 +106,10 @@ The sequence diagram shows two important aspects of the architecture:
  - The `find_qr` node executes until all statements are published, then publishes an end message and exits. It simulates the first phase of the scenario: when the robot collects data from the environment.
  - The `battery_manager` node is always active, publishing when the robot has a low battery. It is called by the `state_machine` node for recharging the robot, implemented as a blocking service.
 
+Regarding the connection between the `state_machine` and the `armor_service`, the reason request is performed as follows:
+ - The first time after building the map, to infer knowledge about the environment.
+ - Every time that the robot needs to query the ontology for reachale and urgent locations, to update the robot position and the time stamps.
+
 ### States diagram ###
 
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/states_diagram.png" width="900">
@@ -110,6 +118,8 @@ The states diagram is made from the point of view of the state machine, for more
 
 Phase 2 is an infinite loop starting always with the query to the ontology to retrieve the reachable locations.
 After each robot's movement, the ontology is updated, taking care of the time stamps.
+
+This diagram shows the condition mentioned in the assumptions: if the robot has a low battery, but the recharging location is not reachable, it choses the next location according with the implemented policy.
 
 ### ROS messages and actions ###
 
@@ -209,6 +219,8 @@ class Buildmap(smach.State):
 ```
 
 The helper class is passed to states as an input parameter.
+
+For more details on the `state_machine_helper` class methods, see the dedicated section below, or refers to the [documentation](https://ettore9x9.github.io/surveillance_robot/).
 
 This is an example of the `state_machine` node terminal, showing the various state transitions:
 
