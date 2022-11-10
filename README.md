@@ -269,9 +269,13 @@ Depending if the ros parameter `test/random_sense/active` is set to true or fals
  - True: It uses the utility component `environment` for the knowledge of doors and locations, publishing them with a random delay in the range specified by the ros parameter `test/random_sense/statement_time`.
  - False: It asks the user to type the knowledge of the environment, publishing statements until the user exits by typing `quit`.
 
-This image shows the behavior of the find_qr node in the case where the random publisher is selected:
+This image shows the behavior of the `find_qr` node in the case where the random publisher is selected:
 
-<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/find_qr_terminal.png" width="600">
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/find_qr_terminal_random.png" width="600">
+
+Instead, if the manual publisher is selected, the behavior is the following:
+
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/find_qr_terminal_manual.png" width="600">
 
 All the environment's statements are published on the topic `map/statement`; they are made of a location and a door. 
 The knowledge of rooms and corridors is inferred after by the reasoner.
