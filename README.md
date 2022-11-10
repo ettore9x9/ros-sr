@@ -211,7 +211,7 @@ class Buildmap(smach.State):
 
 The helper class is passed to states as an input parameter.
 
-This is an example of the state_machine node terminal, showing the various state transitions:
+This is an example of the `state_machine` node terminal, showing the various state transitions:
 
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/state_machine_terminal.png" width="600">
 
@@ -242,6 +242,8 @@ The number of `via_points` can be set with the `test/random_plan_points` paramet
 When a new `via_points` is generated, the updated plan is provided as `feedback`. 
 When all the `via_points` have been generated the plan is provided as `results`.
 
+This is an example of the `planner` node terminal, showing the returned list of via points:
+
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/planner_terminal.png" width="600">
 
 ### The `controller` Node ###
@@ -254,6 +256,8 @@ Given the plan, this component iterates for each planned `via_point` and waits t
 The waiting time can be tuned through the `test/random_motion_time` parameter detailed below. 
 Each time a `via_point` is reached, a `feedback` is provided. 
 When the last `via_point` is reached, the action service provides a result by propagating the current robot position.
+
+This is an example of the `controller` node terminal, printing each time a new via point is reached:
 
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/controller_terminal.png" width="600">
 
