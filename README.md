@@ -1,7 +1,6 @@
 # Surveillance robot #
 **A ROS-based simulation of a surveillance robot in a close environment.**  
 Author: *Ettore Sani*
-
 mail: 5322242@studenti.unige.it
 
 ---
@@ -88,10 +87,10 @@ Given the scenario and the assumptions, the software architecture is developed a
 
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/component_diagram.png" width="600">
 
-In the component diagram we can see that the `state_machine` node is the centre of the whole architecture.
+In the component diagram, we can see that the `state_machine` node is the center of the whole architecture.
 Each other software component simulates a task performed by the robot, such as planning the trajectory of the robot.
 The `battery_manager` component provides two interfaces with the state_machine, that are:
- - *Bool*: a message that triggers when the robot gots low battery, defined in the standard ros service library.
+ - *Bool*: a message that triggers when the robot has a low battery, defined in the standard ros service library.
  - *SetBool*: a service used for recharging the robot, defined in the standard ros service library.
 
 
@@ -100,8 +99,8 @@ The `battery_manager` component provides two interfaces with the state_machine, 
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/temporal_diagram.png" width="900">
 
 The sequence diagram shows two important aspects of the architecture:
- - The `find_qr` node executes until all statements are published, then publishes an end message and exits. It simulates the phase 1 of the scenario: when the robot collects data from the environment.
- - The `battery_manager` node is always active, publishing when the robot gots low battery. It is called by the `state_machine` node for recharging the robot, implemented as a blocking service.
+ - The `find_qr` node executes until all statements are published, then publishes an end message and exits. It simulates the first phase of the scenario: when the robot collects data from the environment.
+ - The `battery_manager` node is always active, publishing when the robot has a low battery. It is called by the `state_machine` node for recharging the robot, implemented as a blocking service.
 
 ### States diagram ###
 
@@ -109,14 +108,14 @@ The sequence diagram shows two important aspects of the architecture:
 
 The states diagram is made from the point of view of the state machine, for more details on each state see the state machine diagram in the dedicated section.
 
-The phase 2 is an infinite loop starting always with the query to the ontology to retreive the reachable locations.
+Phase 2 is an infinite loop starting always with the query to the ontology to retrieve the reachable locations.
 After each robot's movement, the ontology is updated, taking care of the time stamps.
 
 ### ROS messages and actions ###
 
 For building interfaces between nodes, in this package there are some custom messages and actions:
  - `Point.msg`: 2D point in space, defined by x and y coordinates.
- - `Statement.msg`: couple of a door and a location, with a timestamp. It represents a statement retreived from the environment, to be stored in the ontology.
+ - `Statement.msg`: a couple of a door and a location, with a timestamp. It represents a statement received from the environment, to be stored in the ontology.
  - `Plan.action`: motion planning interface, depending on the `Point.msg`.
    - *goal*: target and actual points.
    - *result*: list of via points.
@@ -354,5 +353,18 @@ This software requires the following ROS parameters.
 In addition, the `random_watch_over.launch` also requires the following parameters. This occurs because `test/random_sense/active` has been set to `True`.
  - `test/random_sense/battery_time`: It indicates the time passed within the battery state becomes low. It should be a list of two float numbers, i.e., `[min_time, max_time]` in seconds and the time passed after the robot starts moving after a recharge will be a random value within such an interval.
  - `test/random_sense/statement_time`: It indicates the time passed between publishing two statements. It should be a list of two float numbers, i.e., `[min_time, max_time]` in seconds, and the time passed after publishing a statement will be a random value within such an interval.
+
+## Improvements ##
+
+These are some possible improvements to this repository:
+ - Implements fault management.
+ - Improve the interface for building the environment with some graphical features.
+ - Make the robot find the shortest path to the recharging position when it has a low battery.
+ - Build a hierarchy between urgent locations, and make the robot moves to the more urgent.
+ - Implements the possibility of switching between the two phases arbitrarily.
+ - If a path between two locations has already been planned, use the same plan to reduce latency.
+ - When the robot has a low battery, let the architecture react immediately.
+ - Implements the possibility of adding another robot.
+ - Implements the possibility of having different recharging locations.
    
 ---
