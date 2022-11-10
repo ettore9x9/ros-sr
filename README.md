@@ -1,6 +1,7 @@
 # Surveillance robot #
 **A ROS-based simulation of a surveillance robot in a close environment.**  
 Author: *Ettore Sani*
+
 mail: 5322242@studenti.unige.it
 
 ---
@@ -210,6 +211,8 @@ class Buildmap(smach.State):
 
 The helper class is passed to states as an input parameter.
 
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/state_machine_terminal.png" width="600">
+
 ### The `battery_manager` Node ###
 
 
@@ -237,6 +240,8 @@ The number of `via_points` can be set with the `test/random_plan_points` paramet
 When a new `via_points` is generated, the updated plan is provided as `feedback`. 
 When all the `via_points` have been generated the plan is provided as `results`.
 
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/planner_terminal.png" width="600">
+
 ### The `controller` Node ###
 
 The `controller` node implements an action server named `motion/controller`. 
@@ -247,6 +252,8 @@ Given the plan, this component iterates for each planned `via_point` and waits t
 The waiting time can be tuned through the `test/random_motion_time` parameter detailed below. 
 Each time a `via_point` is reached, a `feedback` is provided. 
 When the last `via_point` is reached, the action service provides a result by propagating the current robot position.
+
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/controller_terminal.png" width="600">
 
 ### The `find_qr` Node ###
 
@@ -296,7 +303,7 @@ The `environment` module stores the knowledge about the environment that the `fi
 
 The default environment is:
 
-<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/default_environment.png" width="600">
+<img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/default_environment.png" width="400">
 
 ### Launching the Software
 
