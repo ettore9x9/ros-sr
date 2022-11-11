@@ -326,13 +326,13 @@ The default environment is:
 
 <img src="https://github.com/ettore9x9/surveillance_robot/blob/master/diagrams/default_environment.png" width="400">
 
-### Launching the Software
+## Launching the Software ##
 
 This software has been based on ROS Noetic, and it has been developed with this Docker-based
 [environment](https://hub.docker.com/repository/docker/carms84/exproblab), which already 
 provides the required dependencies listed above. 
 
-### Installation
+### Installation ###
 
 Follow these steps to install the software.
  - Clone this repository inside your ROS workspace (which should be sourced in your `.bashrc`).
@@ -340,7 +340,7 @@ Follow these steps to install the software.
  - Run `catkin_make` from the root of your ROS workspace.
  - Install `xterm` by entering the command `sudo apt install -y xterm`.
 
-### Launchers
+### Launchers ###
 
 Use the following command to launch the software with a keyboard-based interface:
 ```bash
@@ -352,7 +352,7 @@ Use the following command to launch the software with randomized stimulus:
 roslaunch surveillance_robot random_watch_over.launch
 ```
 
-### ROS Parameters
+### ROS Parameters ###
 
 This software requires the following ROS parameters.
  - `test/random_plan_points`: It represents the number of via points in a plan, and it should be a list of two integer numbers `[min_n, max_n]`. A random value within such an interval will be chosen to simulate plans of different lengths.
