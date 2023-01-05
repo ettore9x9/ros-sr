@@ -244,13 +244,9 @@ class helper():
 		randomically. It waits until the path is planned, then returns.
 
 		"""
-		next_point = Point()                             # initialize the goal point
-		next_point.x = random.uniform(0,anm.DIMENSION)   # compute a random x position
-		next_point.y = random.uniform(0,anm.DIMENSION)   # compute a random y position
 
 		request = PlanActionGoal()                       # initialize the action service request
-		request.goal.target = next_point                 # fill the goal point of the action service request
-		request.goal.actual = self.actual_point          # fill the actual point of the action service request
+		request.goal.target = self.goal_loc              # fill the goal point of the action service request
 
 		self.client_planner.send_goal(request.goal)      # send the request to the action server
 		self.client_planner.wait_for_result()            # wait for the result of the action service

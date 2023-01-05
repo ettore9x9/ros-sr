@@ -3,8 +3,7 @@
 ### Action Server Goal
 
 # The point to be reached at the end of the plan.
-Point target
-Point actual
+string target
 
 ---
 
